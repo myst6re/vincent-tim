@@ -27,8 +27,9 @@ class TimFile : public TextureFile
 {
 public:
 	TimFile();
-	TimFile(const TextureFile &texture, quint8 bpp, quint16 palX, quint16 palY, quint16 palW, quint16 palH, quint16 imgX, quint16 imgY);
-	TimFile(const TextureFile &texture);
+	TimFile(const TextureFile &texture,
+	        quint16 palX=0, quint16 palY=0,
+	        quint16 imgX=0, quint16 imgY=0);
 	bool open(const QByteArray &data);
 	bool save(QByteArray &data) const;
 	inline quint8 depth() const {
@@ -66,6 +67,7 @@ public:
 	static TimFile fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette = QImage());
 	static QList<PosSize> findTims(const QByteArray &data, int limit = 0);
 private:
+	void setDepth(quint8 depth);
 	quint8 bpp;
 	quint16 palX, palY;
 	quint16 palW, palH;

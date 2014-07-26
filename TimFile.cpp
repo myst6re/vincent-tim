@@ -19,18 +19,15 @@
 #include "PsColor.h"
 
 TimFile::TimFile() :
-	TextureFile(), bpp(0), palX(0), palY(0), palW(0), palH(0), imgX(0), imgY(0)
+	TextureFile(), bpp(1), palX(0), palY(0), palW(0), palH(0), imgX(0), imgY(0)
 {
 }
 
-TimFile::TimFile(const TextureFile &texture, quint8 bpp, quint16 palX, quint16 palY, quint16 palW, quint16 palH, quint16 imgX, quint16 imgY) :
-	TextureFile(texture), bpp(bpp), palX(palX), palY(palY), palW(palW), palH(palH), imgX(imgX), imgY(imgY)
+TimFile::TimFile(const TextureFile &texture, quint16 palX, quint16 palY, quint16 imgX, quint16 imgY) :
+	TextureFile(texture), palX(palX), palY(palY), imgX(imgX), imgY(imgY)
 {
-}
-
-TimFile::TimFile(const TextureFile &texture) :
-    TextureFile(texture), bpp(0), palX(0), palY(0), palW(0), palH(0), imgX(0), imgY(0)
-{
+	setDepth(texture.depth());
+	setPaletteSize(texture.paletteSize());
 }
 
 bool TimFile::open(const QByteArray &data)
@@ -69,6 +66,11 @@ bool TimFile::open(const QByteArray &data)
 		memcpy(&palY, &constData[14], 2);
 		memcpy(&palW, &constData[16], 2);
 		memcpy(&palH, &constData[18], 2);
+
+//		qDebug() << QString("-Palette-");
+//		qDebug() << QString("Size = %1, w = %2, h = %3").arg(palSize).arg(palW).arg(palH);
+//		qDebug() << QString("x = %1, y = %2").arg(palX).arg(palY);
+
 		if((quint32)dataSize < 8+palSize/* || palSize != (quint32)palW*palH*2+12*/)
 			return false;
 
@@ -101,14 +103,6 @@ bool TimFile::open(const QByteArray &data)
 		}
 
 		_currentColorTable = 0;
-
-//		quint16 palX, palY;
-//		memcpy(&palX, &constData[12], 2);
-//		memcpy(&palY, &constData[14], 2);
-
-//		qDebug() << QString("-Palette-");
-//		qDebug() << QString("Size = %1, w = %2, h = %3").arg(palSize).arg(palW).arg(palH);
-//		qDebug() << QString("x = %1, y = %2").arg(palX).arg(palY);
 //		qDebug() << QString("NbPal = %1 (valid : %2)").arg(nbPal).arg((palSize-12)%(onePalSize*2));
 	}
 
@@ -230,7 +224,7 @@ bool TimFile::save(QByteArray &data) const
 	data.append((char *)&flag, 4);
 
 	if(hasPal) {
-		quint8 colorPerPal = this->colorPerPal();
+		quint16 colorPerPal = this->colorPerPal();
 		quint32 sizePalSection = 12 + _colorTables.size() * colorPerPal * 2;
 
 		data.append((char *)&sizePalSection, 4);
@@ -306,14 +300,21 @@ bool TimFile::save(QByteArray &data) const
 	return true;
 }
 
+void TimFile::setDepth(quint8 depth)
+{
+	if (depth < 8) {
+		bpp = 0;
+	} else {
+		bpp = depth / 8;
+	}
+}
+
 ExtraData TimFile::extraData() const
 {
 	QMap<QString, QVariant> ret;
-	ret["depth"] = depth();
+	//ret["depth"] = depth();
 	ret["paletteX"] = paletteX();
 	ret["paletteY"] = paletteY();
-	ret["paletteW"] = paletteW();
-	ret["paletteH"] = paletteH();
 	ret["imageX"] = imageX();
 	ret["imageY"] = imageY();
 	return ExtraData(ret);
@@ -323,20 +324,16 @@ bool TimFile::setExtraData(const ExtraData &extraData)
 {
 	bool ok;
 	QMap<QString, QVariant> fields = extraData.fields();
-	quint8 depth;
+	//quint8 depth = 255;
 
 	setExtraDataFieldUsed(fields);
 
-	setExtraDataField(depth, "depth");
-	if (depth < 8) {
-		bpp = depth;
-	} else {
-		bpp = depth / 8;
-	}
+	/*setExtraDataField(depth, "depth");
+	if (depth != 255) {
+		setDepth(depth);
+	}*/
 	setExtraDataField(palX, "paletteX");
 	setExtraDataField(palY, "paletteY");
-	setExtraDataField(palW, "paletteW");
-	setExtraDataField(palH, "paletteH");
 	setExtraDataField(imgX, "imageX");
 	setExtraDataField(imgY, "imageY");
 

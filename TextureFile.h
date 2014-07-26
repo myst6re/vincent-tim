@@ -23,8 +23,10 @@
 
 #define setExtraDataFieldUsed(fields)
 #define setExtraDataField(var, key) \
-	var = fields[key].toUInt(&ok); \
-	if (!ok) return false;
+	if (fields.contains(key)) { \
+		var = fields[key].toUInt(&ok); \
+		if (!ok) return false; \
+	}
 
 class TextureFile
 {
@@ -54,10 +56,10 @@ public:
 	virtual quint8 depth() const=0;
 	QImage palette() const;
 	void setPalette(const QImage &image);
+	virtual QSize paletteSize() const;
 	void debug() const;
 	static QStringList supportedTextureFormats();
 protected:
-	virtual QSize paletteSize() const;
 	virtual void setPaletteSize(const QSize &size);
 	virtual inline quint16 colorPerPal() const {
 		return 256;
