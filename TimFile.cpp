@@ -61,11 +61,11 @@ bool TimFile::open(const QByteArray &data)
 		if(dataSize < 20)
 			return false;
 
-		memcpy(&palSize, &constData[8], 4);
-		memcpy(&palX, &constData[12], 2);
-		memcpy(&palY, &constData[14], 2);
-		memcpy(&palW, &constData[16], 2);
-		memcpy(&palH, &constData[18], 2);
+		memcpy(&palSize, constData + 8, 4);
+		memcpy(&palX, constData + 12, 2);
+		memcpy(&palY, constData + 14, 2);
+		memcpy(&palW, constData + 16, 2);
+		memcpy(&palH, constData + 18, 2);
 
 //		qDebug() << QString("-Palette-");
 //		qDebug() << QString("Size = %1, w = %2, h = %3").arg(palSize).arg(palW).arg(palH);
@@ -88,7 +88,7 @@ bool TimFile::open(const QByteArray &data)
 				QVector<QRgb> pal;
 
 				for(quint16 j=0 ; j<onePalSize ; ++j) {
-					memcpy(&color, &constData[20+pos*2+j*2], 2);
+					memcpy(&color, constData + 20 + pos*2 + j*2, 2);
 					pal.append(PsColor::fromPsColor(color, true));
 				}
 
@@ -109,11 +109,11 @@ bool TimFile::open(const QByteArray &data)
 	if((quint32)dataSize < 20+palSize)
 		return false;
 
-	memcpy(&imgSize, &constData[8+palSize], 4);
-	memcpy(&imgX, &constData[12+palSize], 2);
-	memcpy(&imgY, &constData[14+palSize], 2);
-	memcpy(&w, &constData[16+palSize], 2);
-	memcpy(&h, &constData[18+palSize], 2);
+	memcpy(&imgSize, constData + 8 + palSize, 4);
+	memcpy(&imgX, constData + 12 + palSize, 2);
+	memcpy(&imgY, constData + 14 + palSize, 2);
+	memcpy(&w, constData + 16 + palSize, 2);
+	memcpy(&h, constData + 18 + palSize, 2);
 	if(bpp==0)		w*=4;
 	else if(bpp==1)	w*=2;
 
@@ -181,7 +181,7 @@ bool TimFile::open(const QByteArray &data)
 	{
 		while(i<size && y<h)
 		{
-			memcpy(&color, &constData[20+palSize+i], 2);
+			memcpy(&color, constData + 20 + palSize + i, 2);
 			pixels[x + y*w] = PsColor::fromPsColor(color, true);
 
 			++x;
@@ -197,7 +197,7 @@ bool TimFile::open(const QByteArray &data)
 	{
 		while(i<size && y<h)
 		{
-			memcpy(&color, &constData[20+palSize+i], 3);
+			memcpy(&color, constData + 20 + palSize + i, 3);
 			pixels[x + y*w] = qRgb(color >> 16, (color >> 8) & 0xFF, color & 0xFF);
 
 			++x;

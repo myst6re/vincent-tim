@@ -120,7 +120,7 @@ bool TexFile::open(const QByteArray &data)
 
 		for(i=0 ; i<imageSectionSize ; i+=_header.bytesPerPixel) {
 			if(_header.bytesPerPixel == 2) {
-				memcpy(&color, &constData[headerSize+i], 2);
+				memcpy(&color, constData + headerSize + i, 2);
 				pixels[i/2] = PsColor::fromPsColor(color);
 			} else if(_header.bytesPerPixel == 3) {
 				pixels[i/3] = qRgb(constData[headerSize+i], constData[headerSize+i+1], constData[headerSize+i+2]);
