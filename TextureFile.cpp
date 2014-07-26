@@ -140,7 +140,12 @@ void TextureFile::setCurrentColorTable(int id)
 void TextureFile::setColorTable(int id, const QVector<QRgb> &colorTable)
 {
 	if(id < _colorTables.size()) {
-		_colorTables.replace(id, colorTable);
+		int nbColors = _colorTables.at(id).size();
+		QVector<QRgb> ct = colorTable;
+		if (nbColors != colorTable.size()) {
+			ct.resize(nbColors);
+		}
+		_colorTables.replace(id, ct);
 	}
 }
 
@@ -208,14 +213,18 @@ void TextureFile::setPalette(const QImage &image)
 	setPaletteSize(image.size());
 }
 
-QSize TextureFile::paletteSize() const
+int TextureFile::nbColorsPerPalette() const
 {
 	if (_colorTables.isEmpty()) {
-		return QSize();
+		return 0;
 	}
 
-	int nbColorPerPalette = _colorTables.first().size();
-	return QSize(16, (nbColorPerPalette / 16) * colorTableCount());
+	return _colorTables.first().size();
+}
+
+QSize TextureFile::paletteSize() const
+{
+	return QSize(16, (nbColorsPerPalette() / 16) * colorTableCount());
 }
 
 void TextureFile::setPaletteSize(const QSize &size)

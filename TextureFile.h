@@ -56,6 +56,7 @@ public:
 	virtual quint8 depth() const=0;
 	QImage palette() const;
 	void setPalette(const QImage &image);
+	int nbColorsPerPalette() const;
 	virtual QSize paletteSize() const;
 	void debug() const;
 	static QStringList supportedTextureFormats();
