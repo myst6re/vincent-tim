@@ -1,0 +1,128 @@
+TEX Value Occurencies
+=====================
+BPP == 16
+
+"alphaBitmask"
+         32768 -> x 5
+"alphaMax"
+         1 -> x 5
+"alphaShift"
+         15 -> x 5
+"bitDepth"
+         16 -> x 5
+"bitsPerIndex"
+         0 -> x 5
+"bitsPerPixel"
+         16 -> x 5
+"blueBitmask"
+         31744 -> x 5
+"blueMax"
+         31 -> x 5
+"blueShift"
+         10 -> x 5
+"bytesPerPixel"
+         2 -> x 5
+"greenBitmask"
+         992 -> x 5
+"greenMax"
+         31 -> x 5
+"greenShift"
+         5 -> x 5
+"hasColorKey"
+         0 -> x 5
+"hasColorKeyArray"
+         0 -> x 5
+"hasPal"
+         0 -> x 5
+"indexedTo8bit"
+         0 -> x 5
+"maxAlphaBits"
+         8 -> x 5
+"maxBitsPerColor"
+         8 -> x 5
+"maxBitsPerPixel"
+         32 -> x 5
+"minAlphaBits"
+         0 -> x 2
+         4 -> x 3
+"minBitsPerColor"
+         4 -> x 5
+"minBitsPerPixel"
+         8 -> x 5
+"nbAlphaBits1"
+         1 -> x 5
+"nbAlphaBits2"
+         7 -> x 5
+"nbBlueBits1"
+         5 -> x 5
+"nbBlueBits2"
+         3 -> x 5
+"nbColorsPerPalette1"
+         0 -> x 5
+"nbColorsPerPalette2"
+         0 -> x 5
+"nbGreenBits1"
+         5 -> x 5
+"nbGreenBits2"
+         3 -> x 5
+"nbPalettes"
+         0 -> x 5
+"nbRedBits1"
+         5 -> x 5
+"nbRedBits2"
+         3 -> x 5
+"paletteIndex"
+         0 -> x 5
+"paletteSize"
+         0 -> x 5
+"pitch"
+         0 -> x 5
+"redBitmask"
+         31 -> x 5
+"redMax"
+         31 -> x 5
+"redShift"
+         0 -> x 5
+"referenceAlpha"
+         255 -> x 5
+"runtimeData1"
+         0 -> x 5
+"runtimeData2"
+         0 -> x 5
+"runtimeData3"
+         4 -> x 5
+"runtimeData4"
+         0 -> x 4
+         34504792 -> x 1
+"runtimeData5"
+         0 -> x 1
+         123666580 -> x 4
+"unknown1"
+         0 -> x 5
+"unknown10"
+         0 -> x 1
+         896 -> x 4
+"unknown11"
+         0 -> x 2
+         128 -> x 2
+"unknown2"
+         0 -> x 2
+         1 -> x 3
+"unknown3"
+         3 -> x 5
+"unknown4"
+         0 -> x 5
+"unknown5"
+         0 -> x 5
+"unknown6"
+         0 -> x 5
+"unknown7"
+         0 -> x 5
+"unknown8"
+         0 -> x 5
+"unknown9"
+         0 -> x 4
+         896 -> x 1
+"version"
+         1 -> x 1
+         2 -> x 4

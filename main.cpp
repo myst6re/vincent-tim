@@ -4,6 +4,12 @@
 #include "TexFile.h"
 #include "TextureImageFile.h"
 
+//#define TESTS_ENABLED
+
+#ifdef TESTS_ENABLED
+#include "tests/Collect.h"
+#endif
+
 void showOptions(const QMap<QString, QString> &options)
 {
 	QMapIterator<QString, QString> it(options);
@@ -50,7 +56,6 @@ QString outputFilename(const QString &filename, const QString &format, int num =
 
 void fromTexture(TextureFile *texture, const QString &path, const Arguments &args, int num=-1)
 {
-	qDebug() << "fromTexture" << path;
 	QString destPath,
 	        destPathTexture,
 	        destPathMeta,
@@ -67,7 +72,6 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 	if (args.palette() < 0 || args.palette() >= texture->colorTableCount()) {
 		if (texture->colorTableCount() <= 0) {
 			destPathTexture = outputFilename(destPath, args.outputFormat(), num);
-			qDebug() << "fromTexture" << path << destPathTexture;
 			if (!saveTextureTo(texture, destPathTexture)) {
 				error = true;
 			}
@@ -76,7 +80,6 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 		for (int paletteID=0; paletteID<texture->colorTableCount(); ++paletteID) {
 			texture->setCurrentColorTable(paletteID);
 			destPathTexture = outputFilename(destPath, args.outputFormat(), num, paletteID);
-			qDebug() << "fromTexture" << path << destPathTexture;
 			if (!saveTextureTo(texture, destPathTexture)) {
 				error = true;
 			}
@@ -132,7 +135,6 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args)
 {
 	QString destPath,
 	        filename = path.mid(path.lastIndexOf('/') + 1),
-	        pathPalette = args.inputPathPalette(),
 	        pathMeta = args.inputPathMeta();
 
 	// filename.outputformat // TODO: set output filename by the user
@@ -167,24 +169,11 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args)
 	}
 	tex->setExtraData(meta);
 
-	if (tex->depth() < 16 && texture->depth() >= 16) { // Do not use isPaletted() here!
-
-		if (pathPalette.isEmpty()) {
-			qWarning() << "Error: Please set the input path palette";
-			goto toTextureError;
-		}
-
-		QImage palette;
-		if (!palette.load(pathPalette)) {
-			qWarning() << "Palette not found!" << pathPalette;
-			goto toTextureError;
-		}
-		tex->setPalette(palette);
-	}
-
 	if (!tex->saveToFile(destPath)) {
 		goto toTextureError;
 	}
+
+	printf("%s\n", qPrintable(destPath));
 
 	delete tex;
 	return true;
@@ -198,6 +187,13 @@ int main(int argc, char *argv[])
 	QCoreApplication a(argc, argv);
 #ifdef Q_OS_WIN
 	QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
+#endif
+	
+#ifdef TESTS_ENABLED
+	qDebug() << "Running tests...";
+	
+	Collect c("tests/tex/files");
+	c.texData();
 #endif
 
 	Arguments args;

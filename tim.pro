@@ -14,7 +14,8 @@ SOURCES += main.cpp \
     TexFile.cpp \
     TextureImageFile.cpp \
     PsColor.cpp \
-    ExtraData.cpp
+    ExtraData.cpp \
+    tests/Collect.cpp
 
 HEADERS += \
     Arguments.h \
@@ -23,6 +24,7 @@ HEADERS += \
     TexFile.h \
     TextureImageFile.h \
     PsColor.h \
-    ExtraData.h
+    ExtraData.h \
+    tests/Collect.h
 
 OTHER_FILES += README.md
