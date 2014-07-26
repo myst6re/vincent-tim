@@ -210,7 +210,12 @@ void TextureFile::setPalette(const QImage &image)
 
 QSize TextureFile::paletteSize() const
 {
-	return QSize(16, 16 * colorTableCount());
+	if (_colorTables.isEmpty()) {
+		return QSize();
+	}
+
+	int nbColorPerPalette = _colorTables.first().size();
+	return QSize(16, (nbColorPerPalette / 16) * colorTableCount());
 }
 
 void TextureFile::setPaletteSize(const QSize &size)

@@ -103,7 +103,7 @@ public:
 	bool open(const QByteArray &data);
 	bool save(QByteArray &data) const;
 	inline quint8 depth() const {
-		return _header.bitsPerPixel;
+		return _header.bitDepth;
 	}
 	void debug();
 	
