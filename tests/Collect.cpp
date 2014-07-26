@@ -6,18 +6,15 @@ Collect::Collect(const QString &dir) :
 {
 }
 
-void Collect::texData() const
+void Collect::textureData(const QString &format) const
 {
-	QStringList texFilenames = _dir.entryList(QStringList("*.tex"), QDir::Files);
+	QStringList texFilenames = _dir.entryList(QStringList("*." + format), QDir::Files);
 	QMap<QString, QMap<quint32, int> > occurrences;
 
 	foreach (const QString &texFilename, texFilenames) {
-		TexFile tex;
-		if (tex.openFromFile(_dir.filePath(texFilename))) {
-			if (tex.header().bitDepth != 8) {
-				continue;
-			}
-			QMap<QString, QVariant> fields = tex.extraData().fields();
+		TextureFile *tex = TextureFile::factory(format);
+		if (tex->openFromFile(_dir.filePath(texFilename))) {
+			QMap<QString, QVariant> fields = tex->extraData().fields();
 			QMapIterator<QString, QVariant> it(fields);
 			while (it.hasNext()) {
 				it.next();
@@ -25,16 +22,17 @@ void Collect::texData() const
 				quint32 val = it.value().toUInt(&ok);
 				if (!ok) {
 					qDebug() << "Collect::texData not an int" << it.key() << it.value();
-					continue;
+				} else {
+					QMap<quint32, int> counts = occurrences.value(it.key());
+					int count = counts.value(val, 0);
+					counts.insert(val, count + 1);
+					occurrences.insert(it.key(), counts);
 				}
-				QMap<quint32, int> counts = occurrences.value(it.key());
-				int count = counts.value(val, 0);
-				counts.insert(val, count + 1);
-				occurrences.insert(it.key(), counts);
 			}
 		} else {
 			qDebug() << texFilename << "cannot open file";
 		}
+		delete tex;
 	}
 
 	QMapIterator<QString, QMap<quint32, int> > it(occurrences);

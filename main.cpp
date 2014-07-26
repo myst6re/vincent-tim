@@ -4,7 +4,7 @@
 #include "TexFile.h"
 #include "TextureImageFile.h"
 
-//#define TESTS_ENABLED
+#define TESTS_ENABLED
 
 #ifdef TESTS_ENABLED
 #include "tests/Collect.h"
@@ -192,8 +192,8 @@ int main(int argc, char *argv[])
 #ifdef TESTS_ENABLED
 	qDebug() << "Running tests...";
 	
-	Collect c("tests/tex/files");
-	c.texData();
+	Collect c("tests/tim/files");
+	c.textureData("tim");
 #endif
 
 	Arguments args;

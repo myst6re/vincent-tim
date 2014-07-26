@@ -7,7 +7,7 @@ class Collect
 {
 public:
 	Collect(const QString &dir);
-	void texData() const;
+	void textureData(const QString &format) const;
 private:
 	QDir _dir;
 };
