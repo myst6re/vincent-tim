@@ -10,25 +10,6 @@
 #include "tests/Collect.h"
 #endif
 
-void showOptions(const QMap<QString, QString> &options)
-{
-	QMapIterator<QString, QString> it(options);
-	while (it.hasNext()) {
-		it.next();
-
-		printf("\t%s\n", qPrintable(it.key()));
-		printf("\t\t%s\n\n", qPrintable(it.value()));
-	}
-}
-
-void help(const Arguments &args)
-{
-	printf("tim [-if input_format][-of output_format] file...\n");
-	printf("tim -a[-of output_format] file...\n");
-	printf("Options\n");
-	showOptions(args.commands());
-}
-
 bool saveTextureTo(TextureFile *texture, const QString &destPath)
 {
 	if (!texture->image().save(destPath)) {
@@ -185,6 +166,8 @@ toTextureError:
 int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
+	QCoreApplication::setApplicationName("tim");
+	QCoreApplication::setApplicationVersion("1.0");
 #ifdef Q_OS_WIN
 	QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
 #endif
@@ -199,7 +182,7 @@ int main(int argc, char *argv[])
 	Arguments args;
 
 	if (args.help() || args.paths().isEmpty()) {
-		help(args);
+		args.showHelp();
 	} else {
 		foreach (const QString &path, args.paths()) {
 			TextureFile *texture;

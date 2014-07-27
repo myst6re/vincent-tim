@@ -4,62 +4,98 @@
 #include "TextureFile.h"
 
 Arguments::Arguments() :
-	_inputFormat(), _outputFormat("png"),
-    _exportPalettes(false), _exportMeta(false),
-	_help(false), _analysis(false), _palette(-1)
+	_palette(-1)
 {
+	_parser.addHelpOption();
+	_parser.addVersionOption();
+	
+	TIM_ADD_ARGUMENT(TIM_OPTION_NAMES("if", "input-format"),
+	                 "Input format (*tim*, tex, png, jpg, bmp).",
+	                 "input-format", "");
+	TIM_ADD_ARGUMENT(TIM_OPTION_NAMES("of", "output-format"),
+	                 "Output format (tim, tex, *png*, jpg, bmp).",
+	                 "output-format", "png");
+	TIM_ADD_ARGUMENT(TIM_OPTION_NAMES("p", "palette"),
+	                 "If the input format is a texture: Select the palette to extract.",
+	                 "palette", "-1");
+	TIM_ADD_ARGUMENT("input-path-palette",
+	                 "If the output format is a texture: path to the palette file.",
+	                 "input-path-palette", "");
+	TIM_ADD_ARGUMENT("input-path-meta",
+	                 "If the output format is a texture: path to the meta file.",
+	                 "input-path-meta", "");
+	TIM_ADD_ARGUMENT(TIM_OPTION_NAMES("d", "destination"),
+	                 "Destination directory.",
+	                 "destination", "");
+	TIM_ADD_FLAG(TIM_OPTION_NAMES("ep", "export-palette"),
+	                 "Save palette colors into a 'output format' file.");
+	TIM_ADD_FLAG(TIM_OPTION_NAMES("em", "export-meta"),
+	                 "Save meta data in a text file.");
+	TIM_ADD_FLAG(TIM_OPTION_NAMES("e", "export-all"),
+	                 "Alias for --ep --em.");
+	TIM_ADD_FLAG(TIM_OPTION_NAMES("a", "analysis"),
+	             "Analysis mode, search TIM files into the input file.");
+
+	_parser.addPositionalArgument("files", QCoreApplication::translate("Arguments", "Input files."), "[files...]");
+
 	parse();
 }
 
-const QStringList &Arguments::paths() const
+QStringList Arguments::paths() const
 {
 	return _paths;
 }
 
 QString Arguments::inputFormat(const QString &path) const
 {
-	if(_inputFormat.isEmpty()) {
+	QString inputFormat = _parser.value("input-format");
+	if(inputFormat.isEmpty()) {
 		int index = path.lastIndexOf('.');
 		if(index > -1) {
 			return path.mid(index + 1);
 		}
 	}
-	return _inputFormat;
+	return inputFormat;
 }
 
-const QString &Arguments::outputFormat() const
+QString Arguments::outputFormat() const
 {
-	return _outputFormat;
+	return _parser.value("output-format");
 }
 
-const QString &Arguments::destination() const
+QString Arguments::destination() const
 {
-	return _destination;
+	return _parser.value("destination");
 }
 
-const QString &Arguments::inputPathPalette() const
+QString Arguments::inputPathPalette() const
 {
-	return _inputPathPalette;
+	return _parser.value("input-path-palette");
 }
 
-const QString &Arguments::inputPathMeta() const
+QString Arguments::inputPathMeta() const
 {
-	return _inputPathMeta;
+	return _parser.value("input-path-meta");
 }
 
 bool Arguments::exportPalettes() const
 {
-	return _exportPalettes;
+	return _parser.isSet("export-palette") || exportAll();
 }
 
 bool Arguments::exportMeta() const
 {
-	return _exportMeta;
+	return _parser.isSet("export-meta") || exportAll();
+}
+
+bool Arguments::exportAll() const
+{
+	return _parser.isSet("export-all");
 }
 
 bool Arguments::help() const
 {
-	return _help;
+	return _parser.isSet("help");
 }
 
 int Arguments::palette() const
@@ -69,74 +105,21 @@ int Arguments::palette() const
 
 bool Arguments::analysis() const
 {
-	return _analysis;
+	return _parser.isSet("analysis");
 }
 
 void Arguments::parse()
 {
-	QStringList args = qApp->arguments();
-	args.removeFirst();// Application path
+	bool ok;
 
-	_help = false;
-	_paths.clear();
-
-	while (!args.isEmpty()) {
-		const QString &arg = args.takeFirst();
-
-		if ((arg == "-if" || arg == "--input-format") && !args.isEmpty()) {
-			_inputFormat = args.takeFirst();
-		} else if ((arg == "-of" || arg == "--output-format") && !args.isEmpty()) {
-			_outputFormat = args.takeFirst();
-		} else if (arg == "-h" || arg == "--help") {
-			_help = true;
-		} else if ((arg == "-p" || arg == "--palette") && !args.isEmpty()) {
-			bool ok;
-			_palette = args.takeFirst().toInt(&ok);
-			if(!ok) {
-				_palette = -1;
-			}
-		} else if (arg == "--input-path-palette" && !args.isEmpty()) {
-			_inputPathPalette = args.takeFirst();
-		} else if (arg == "--input-path-meta" && !args.isEmpty()) {
-			_inputPathMeta = args.takeFirst();
-		} else if ((arg == "-d" || arg == "--destination") && !args.isEmpty()) {
-			_destination = args.takeFirst();
-		} else if (arg == "-ep" || arg == "--export-palette") {
-			_exportPalettes = true;
-		} else if (arg == "-em" || arg == "--export-meta") {
-			_exportMeta = true;
-		} else if (arg == "-ea" || arg == "--export-all") {
-			_exportPalettes = true;
-			_exportMeta = true;
-		} else if (arg == "-a" || arg == "--analysis") {
-			_analysis = true;
-		} else {
-			_paths << QDir::fromNativeSeparators(arg);
-		}
-	}
+	_parser.process(*qApp);
 
 	wilcardParse();
-}
 
-QMap<QString, QString> Arguments::commands() const
-{
-	QMap<QString, QString> options;
-
-	options["-if --input-format"] = "Input format (*tim*, tex, png, jpg, bmp).";
-	options["-of --output-format"] = "Output format (tim, tex, *png*, jpg, bmp).";
-	options["-h --help"] = "Show this help and quit.";
-	// TODO: and how select several palettes?
-	options["-p --palette"] = "If the input format is a texture: Select the palette to extract.";
-	options["--input-path-palette"] = "If the output format is a texture: path to the palette file.";
-	options["--input-path-meta"] = "If the output format is a texture: path to the meta file.";
-	options["-d --destination"] = "Destination directory.";
-	options["-ep --export-palette"] = "Save palette colors into a 'output format' file.";
-	options["-em --export-meta"] = "Save meta data in a text file.";
-	options["-ea --export-all"] = "Alias for -ep -em.";
-	options["-a --analysis"] = "Analysis mode, search TIM files into the input file.";
-	// options["-q --quiet"] = "Suppress all outputs"; // TODO?
-
-	return options;
+	_palette = _parser.value("palette").toInt(&ok);
+	if (!ok) {
+		_palette = -1;
+	}
 }
 
 QStringList Arguments::searchFiles(const QString &path)
@@ -158,7 +141,7 @@ void Arguments::wilcardParse()
 {
 	QStringList paths;
 
-	foreach (const QString &path, _paths) {
+	foreach (const QString &path, _parser.positionalArguments()) {
 		if (path.contains('*') || path.contains('?')) {
 			paths << searchFiles(path);
 		} else {
