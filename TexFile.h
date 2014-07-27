@@ -117,9 +117,6 @@ public:
 		return _header;
 	}
 	void setHeader(Version version, bool hasAlpha, bool fourBitsPerIndex=false);
-
-	QVector<quint8> alpha() const;
-	void setAlpha(const QVector<quint8> &alpha);
 private:
 	TexStruct _header;
 	QVector<quint8> colorKeyArray;

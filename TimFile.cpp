@@ -300,16 +300,6 @@ bool TimFile::save(QByteArray &data) const
 	return true;
 }
 
-QVector<quint8> TimFile::alpha() const
-{
-	// TODO
-}
-
-void TimFile::setAlpha(const QVector<quint8> &alpha)
-{
-	// TODO
-}
-
 void TimFile::setDepth(quint8 depth)
 {
 	if (depth < 8) {

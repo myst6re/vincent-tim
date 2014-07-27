@@ -107,7 +107,6 @@ bool TexFile::open(const QByteArray &data)
 		if(_header.hasColorKeyArray) {
 			quint32 colorKeyStart = imageStart + imageSectionSize;
 
-			colorKeyArray.clear();
 			for(quint32 j=0 ; j<_header.nbPalettes ; ++j) {
 				colorKeyArray.append(data.at(colorKeyStart+j));
 			}
@@ -177,23 +176,6 @@ bool TexFile::save(QByteArray &data) const
 	}
 
 	return true;
-}
-
-QVector<quint8> TexFile::alpha() const
-{
-	QVector<quint8> ret;
-	foreach (quint8 colorKey, colorKeyArray) {
-		ret.append(colorKey);
-	}
-	return ret;
-}
-
-void TexFile::setAlpha(const QVector<quint8> &alpha)
-{
-	colorKeyArray.clear();
-	foreach (quint8 a, alpha) {
-		colorKeyArray.append(a);
-	}
 }
 
 void TexFile::setHeader(Version version, bool hasAlpha, bool fourBitsPerIndex)
