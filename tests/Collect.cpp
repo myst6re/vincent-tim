@@ -1,5 +1,5 @@
 #include "Collect.h"
-#include "TexFile.h"
+#include "../TextureFile.h"
 
 Collect::Collect(const QString &dir) :
     _dir(dir)
