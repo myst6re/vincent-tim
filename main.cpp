@@ -20,39 +20,14 @@ bool saveTextureTo(TextureFile *texture, const QString &destPath)
 	return true;
 }
 
-QString outputFilename(const QString &filename, const QString &format, int num = -1, int palette = -1)
+void fromTexture(TextureFile *texture, const QString &path, const Arguments &args, int num = -1)
 {
-	QString ret = filename;
-
-	if (num >= 0) {
-		ret.append(QString(".%1").arg(num));
-	}
-
-	if (palette >= 0) {
-		ret.append(QString(".%1").arg(palette));
-	}
-
-	return ret.append(".").append(format);
-}
-
-void fromTexture(TextureFile *texture, const QString &path, const Arguments &args, int num=-1)
-{
-	QString destPath,
-	        destPathTexture,
-	        destPathMeta,
-	        destPathPalette,
-	        filename = path.mid(path.lastIndexOf('/') + 1);
+	QString destPathTexture;
 	bool error = false;
-
-	if (!args.destination().isEmpty()) {
-		destPath = QString("%1/%2").arg(args.destination(), filename);
-	} else {
-		destPath = filename;
-	}
 
 	if (args.palette() < 0 || args.palette() >= texture->colorTableCount()) {
 		if (texture->colorTableCount() <= 0) {
-			destPathTexture = outputFilename(destPath, args.outputFormat(), num);
+			destPathTexture = args.destination(path, num);
 			if (!saveTextureTo(texture, destPathTexture)) {
 				error = true;
 			}
@@ -60,13 +35,13 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 
 		for (int paletteID=0; paletteID<texture->colorTableCount(); ++paletteID) {
 			texture->setCurrentColorTable(paletteID);
-			destPathTexture = outputFilename(destPath, args.outputFormat(), num, paletteID);
+			destPathTexture = args.destination(path, num, paletteID);
 			if (!saveTextureTo(texture, destPathTexture)) {
 				error = true;
 			}
 		}
 	} else {
-		destPathTexture = outputFilename(destPath, args.outputFormat(), num);
+		destPathTexture = args.destination(path, num);
 		if (!saveTextureTo(texture, destPathTexture)) {
 			error = true;
 		}
@@ -76,9 +51,7 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 		if (args.exportMeta()) {
 			ExtraData meta = texture->extraData();
 			if (!meta.fields().isEmpty()) {
-				destPathMeta = QString("%1%2.meta")
-				               .arg(destPath)
-				               .arg(num >= 0 ? "." + QString::number(num) : "");
+				QString destPathMeta = args.destinationMeta(path, num);
 				if (!meta.save(destPathMeta)) {
 					qWarning() << "Error: Cannot save extra data";
 					return;
@@ -91,10 +64,7 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 		if (args.exportPalettes() && texture->depth() < 16) {
 			QImage palette = texture->palette();
 			if (!palette.isNull()) {
-				destPathPalette = QString("%1%2.palette.%3")
-				                  .arg(destPath)
-				                  .arg(num >= 0 ? "." + QString::number(num) : "")
-				                  .arg(args.outputFormat());
+				QString destPathPalette = args.destinationPalette(path, num);
 				if (!palette.save(destPathPalette)) {
 					qWarning() << "Error: Cannot save palette";
 					return;
@@ -112,20 +82,9 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 	}
 }
 
-bool toTexture(TextureFile *texture, const QString &path, const Arguments &args)
+bool toTexture(TextureFile *texture, const QString &path, const Arguments &args, int num = -1)
 {
-	QString destPath,
-	        filename = path.mid(path.lastIndexOf('/') + 1),
-	        pathMeta = args.inputPathMeta();
-
-	// filename.outputformat // TODO: set output filename by the user
-	if (!args.destination().isEmpty()) {
-		destPath = QString("%1/%2").arg(args.destination(), filename);
-	} else {
-		destPath = filename;
-	}
-
-	destPath.append(QString(".%1").arg(args.outputFormat()));
+	QString pathMeta = args.inputPathMeta();
 
 	if (pathMeta.isEmpty()) {
 		qWarning() << "Error: Please set the input path meta";
@@ -133,6 +92,7 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args)
 	}
 
 	TextureFile *tex;
+	QString destPath;
 
 	if (args.outputFormat().compare("tex", Qt::CaseInsensitive) == 0) {
 		tex = new TexFile(*texture);
@@ -149,6 +109,8 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args)
 		goto toTextureError;
 	}
 	tex->setExtraData(meta);
+
+	destPath = args.destination(path, num);
 
 	if (!tex->saveToFile(destPath)) {
 		goto toTextureError;
@@ -219,7 +181,13 @@ int main(int argc, char *argv[])
 					foreach (const PosSize &pos, positions) {
 						texture = new TimFile();
 						if (texture->open(data.mid(pos.first, pos.second))) {
-							fromTexture(texture, path, args, num++);
+							if (args.outputFormat().compare("tim", Qt::CaseInsensitive) == 0) {
+								if (!texture->saveToFile(args.destination(path, num))) {
+									break;
+								}
+							} else {
+								fromTexture(texture, path, args, num++);
+							}
 						} else {
 							qWarning() << "Error: Cannot open Texture file";
 						}

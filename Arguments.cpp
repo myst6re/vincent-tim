@@ -61,9 +61,41 @@ QString Arguments::outputFormat() const
 	return _parser.value("output-format");
 }
 
-QString Arguments::destination() const
+QString Arguments::destinationPath(const QString &source, const QString &format, int num, int palette) const
 {
-	return _directory;
+	QString destPath,
+	        sourceFilename = source.mid(source.lastIndexOf('/') + 1);
+
+	if (!_directory.isEmpty()) {
+		destPath = QString("%1/%2").arg(_directory, sourceFilename);
+	} else {
+		destPath = sourceFilename;
+	}
+
+	if (num >= 0) {
+		destPath.append(QString(".%1").arg(num));
+	}
+
+	if (palette >= 0) {
+		destPath.append(QString(".%1").arg(palette));
+	}
+
+	return destPath.append(".").append(format);
+}
+
+QString Arguments::destination(const QString &source, int num, int palette) const
+{
+	return destinationPath(source, outputFormat(), num, palette);
+}
+
+QString Arguments::destinationMeta(const QString &source, int num) const
+{
+	return destinationPath(source, "meta", num);
+}
+
+QString Arguments::destinationPalette(const QString &source, int num) const
+{
+	return destinationPath(source, "palette." + outputFormat(), num);
 }
 
 QString Arguments::inputPathPalette() const
