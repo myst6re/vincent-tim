@@ -303,10 +303,12 @@ bool TimFile::save(QByteArray &data) const
 QVector<quint8> TimFile::alpha() const
 {
 	// TODO
+	return TextureFile::alpha();
 }
 
 void TimFile::setAlpha(const QVector<quint8> &alpha)
 {
+	TextureFile::setAlpha(alpha);
 	// TODO
 }
 
