@@ -64,6 +64,9 @@ public:
 	void setPaletteSize(const QSize &size);
 	virtual inline quint16 colorPerPal() const;
 
+	QVector<quint8> alpha() const;
+	void setAlpha(const QVector<quint8> &alpha);
+
 	static TimFile fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette = QImage());
 	static QList<PosSize> findTims(const QByteArray &data, int limit = 0);
 private:

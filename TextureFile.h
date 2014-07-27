@@ -58,6 +58,10 @@ public:
 	void setPalette(const QImage &image);
 	int nbColorsPerPalette() const;
 	virtual QSize paletteSize() const;
+	virtual QVector<quint8> alpha() const;
+	virtual void setAlpha(const QVector<quint8> &alpha);
+	QImage alphaImage() const;
+	void setAlphaImage(const QImage &image);
 	void debug() const;
 	static QStringList supportedTextureFormats();
 protected:

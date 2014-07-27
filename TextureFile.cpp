@@ -213,6 +213,66 @@ void TextureFile::setPalette(const QImage &image)
 	setPaletteSize(image.size());
 }
 
+QVector<quint8> TextureFile::alpha() const
+{
+	return QVector<quint8>();
+}
+
+void TextureFile::setAlpha(const QVector<quint8> &alpha)
+{
+	Q_UNUSED(alpha);
+}
+
+QImage TextureFile::alphaImage() const
+{
+	QVector<quint8> a = alpha();
+
+	if (a.isEmpty()) {
+		return QImage();
+	}
+
+	QImage image(16, a.size() / 16 + a.size() % 16, QImage::Format_Indexed8);
+	int x = 0, y = 0, i = 0;
+
+	image.setColor(0, Qt::black);
+	image.setColor(1, Qt::white);
+	image.setColor(2, Qt::red);
+	image.fill(0);
+
+	for (; y < image.height() && i < a.size(); ++y) {
+		for (x = 0; x < image.width() && i < a.size(); ++x) {
+			if (a.at(i++)) {
+				image.setPixel(x, y, 1);
+			}
+		}
+	}
+
+	if (x < image.width() || y < image.height()) {
+		image.setPixel(x, y, 2);
+	}
+
+	return image;
+}
+
+void TextureFile::setAlphaImage(const QImage &image)
+{
+	QVector<quint8> a;
+
+	for (int y = 0; y < image.height(); ++y) {
+		for (int x = 0; x < image.width(); ++x) {
+			QRgb pixel = image.pixel(x, y);
+			if (pixel == Qt::red) {
+				goto setAlphaImageEnd;
+			} else {
+				a.append(pixel == Qt::white);
+			}
+		}
+	}
+
+setAlphaImageEnd:
+	setAlpha(a);
+}
+
 int TextureFile::nbColorsPerPalette() const
 {
 	if (_colorTables.isEmpty()) {
