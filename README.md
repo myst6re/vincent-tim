@@ -46,6 +46,27 @@ import you must have exported the palette and the meta data.
         --input-path-meta bar.meta \
         bar.tex output_directory
 
+When creating tex files, the meta data should contains at least these values:
+
+    # Tex version (1=FF7, 2=FF8)
+    version=1
+    # 1 if the image contains transparency
+    hasAlpha=0
+    # 1 if the image have 16 colors per palette
+    fourBitsPerIndex=0
+
+(Many) other values are possible, but common cases are auto-generated
+with these few values.
+
+When creating tim files, here is the basic meta data file:
+
+    paletteX=0
+    paletteY=0
+    imageX=0
+    imageY=0
+
+These are the coordinates where the texture is copied in PlayStation VRAM.
+
 ### Extract tim files from an archive
 
     tim -a --of png archive.foo output_directory
