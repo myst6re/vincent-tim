@@ -160,7 +160,7 @@ QImage TextureFile::palette() const
 		return QImage();
 	}
 
-	QImage image(paletteSize(), QImage::Format_ARGB32);
+	QImage image(paletteSize(), QImage::Format_RGB32);
 	int x, y;
 	const int maxWidth = image.width() - 1,
 	        maxHeight = image.height() - 1;
