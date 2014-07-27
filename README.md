@@ -7,7 +7,7 @@ Features
 --------
 
 The main purpose of this software is to export and reimport a texture image
-to be able to modify this texture with an image editor.
+to be able to modify this texture with a image editor software.
 
 But it is also possible to search and extract tim files from a file, and
 convert tim files to tex files and vice versa.
