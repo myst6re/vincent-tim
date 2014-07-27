@@ -134,7 +134,13 @@ QStringList Arguments::searchFiles(const QString &path)
 		filename = path;
 	}
 
-	return QDir(dirname).entryList(QStringList() << filename, QDir::Files);
+	QDir dir(dirname);
+	QStringList entryList = dir.entryList(QStringList(filename), QDir::Files);
+	int i=0;
+	foreach (const QString &entry, entryList) {
+		entryList.replace(i++, dir.filePath(entry));
+	}
+	return entryList;
 }
 
 void Arguments::wilcardParse()
@@ -143,9 +149,9 @@ void Arguments::wilcardParse()
 
 	foreach (const QString &path, _parser.positionalArguments()) {
 		if (path.contains('*') || path.contains('?')) {
-			paths << searchFiles(path);
+			paths << searchFiles(QDir::fromNativeSeparators(path));
 		} else {
-			paths << path;
+			paths << QDir::fromNativeSeparators(path);
 		}
 	}
 
