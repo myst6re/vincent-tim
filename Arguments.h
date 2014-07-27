@@ -37,6 +37,7 @@ private:
 	void wilcardParse();
 	static QStringList searchFiles(const QString &path);
 	QStringList _paths;
+	QString _directory;
 	int _palette;
 	QCommandLineParser _parser;
 };

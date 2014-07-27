@@ -24,9 +24,6 @@ Arguments::Arguments() :
 	TIM_ADD_ARGUMENT("input-path-meta",
 	                 "If the output format is a texture: path to the meta file.",
 	                 "input-path-meta", "");
-	TIM_ADD_ARGUMENT(TIM_OPTION_NAMES("d", "destination"),
-	                 "Destination directory.",
-	                 "destination", "");
 	TIM_ADD_FLAG(TIM_OPTION_NAMES("ep", "export-palette"),
 	                 "Save palette colors into a 'output format' file.");
 	TIM_ADD_FLAG(TIM_OPTION_NAMES("em", "export-meta"),
@@ -37,6 +34,7 @@ Arguments::Arguments() :
 	             "Analysis mode, search TIM files into the input file.");
 
 	_parser.addPositionalArgument("files", QCoreApplication::translate("Arguments", "Input files."), "[files...]");
+	_parser.addPositionalArgument("directory", QCoreApplication::translate("Arguments", "Output directory."), "[directory]");
 
 	parse();
 }
@@ -65,7 +63,7 @@ QString Arguments::outputFormat() const
 
 QString Arguments::destination() const
 {
-	return _parser.value("destination");
+	return _directory;
 }
 
 QString Arguments::inputPathPalette() const
@@ -155,5 +153,12 @@ void Arguments::wilcardParse()
 		}
 	}
 
-	_paths = paths;
+	if (!paths.isEmpty()) {
+		// Output directory
+		if (QDir(paths.last()).exists()) {
+			_directory = paths.takeLast();
+		}
+
+		_paths = paths;
+	}
 }
