@@ -4,7 +4,7 @@
 #include "TexFile.h"
 #include "TextureImageFile.h"
 
-#define TESTS_ENABLED
+//#define TESTS_ENABLED
 
 #ifdef TESTS_ENABLED
 #include "tests/Collect.h"
