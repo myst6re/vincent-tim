@@ -46,7 +46,7 @@ import you must have exported the palette and the meta data.
         --input-path-meta bar.meta \
         bar.tex output_directory
 
-## Extract tim files from an archive
+### Extract tim files from an archive
 
     tim -a --of png archive.foo output_directory
     tim -a --of tim archive.foo output_directory
