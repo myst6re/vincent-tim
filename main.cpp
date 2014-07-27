@@ -84,7 +84,7 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 
 bool toTexture(TextureFile *texture, const QString &path, const Arguments &args, int num = -1)
 {
-	QString pathMeta = args.inputPathMeta();
+	QString pathMeta = args.inputPathMeta(path);
 
 	if (pathMeta.isEmpty()) {
 		qWarning() << "Error: Please set the input path meta";

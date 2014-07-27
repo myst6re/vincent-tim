@@ -98,14 +98,38 @@ QString Arguments::destinationPalette(const QString &source, int num) const
 	return destinationPath(source, "palette." + outputFormat(), num);
 }
 
-QString Arguments::inputPathPalette() const
+QString Arguments::searchRelatedFile(const QString &inputPathImage, const QString &extension) const
 {
-	return _parser.value("input-path-palette");
+	int indexInputExtension;
+	QString inputPathTruncated = inputPathImage;
+
+	while ((indexInputExtension = inputPathTruncated.lastIndexOf('.')) >= 0) {
+		inputPathTruncated.truncate(indexInputExtension);
+		if (QFile::exists(inputPathTruncated + "." + extension)) {
+			return inputPathTruncated + "." + extension;
+		}
+	}
+
+	return QString();
 }
 
-QString Arguments::inputPathMeta() const
+QString Arguments::inputPathPalette(const QString &inputPathImage) const
 {
-	return _parser.value("input-path-meta");
+	QString palette = _parser.value("input-path-palette");
+	if (palette.isEmpty()) {
+		QString inputExtension = inputPathImage.mid(inputPathImage.lastIndexOf("."));
+		return searchRelatedFile(inputPathImage, "palette" + inputExtension);
+	}
+	return palette;
+}
+
+QString Arguments::inputPathMeta(const QString &inputPathImage) const
+{
+	QString meta = _parser.value("input-path-meta");
+	if (meta.isEmpty()) {
+		return searchRelatedFile(inputPathImage, "meta");
+	}
+	return meta;
 }
 
 bool Arguments::exportPalettes() const

@@ -26,8 +26,8 @@ public:
 	QString destination(const QString &source, int num = -1, int palette = -1) const;
 	QString destinationMeta(const QString &source, int num = -1) const;
 	QString destinationPalette(const QString &source, int num = -1) const;
-	QString inputPathPalette() const;
-	QString inputPathMeta() const;
+	QString inputPathPalette(const QString &inputPathImage) const;
+	QString inputPathMeta(const QString &inputPathImage) const;
 	bool exportPalettes() const;
 	bool exportMeta() const;
 	bool help() const;
@@ -39,6 +39,7 @@ private:
 	void wilcardParse();
 	static QStringList searchFiles(const QString &path);
 	QString destinationPath(const QString &source, const QString &format, int num = -1, int palette = -1) const;
+	QString searchRelatedFile(const QString &inputPathImage, const QString &extension) const;
 	QStringList _paths;
 	QString _directory;
 	int _palette;

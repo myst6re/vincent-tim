@@ -33,12 +33,19 @@ not exportable in a simple image file.
 ### Import png file to a texture
 
 You do not need to import all the exported images, just the modified one. But to
-import you must have exported the palette and the meta data.
+import you must have exported the palette and the meta data with the "-e" flag.
 
     tim --if png --of tim \
-        --input-path-palette foo.palette.png \
-        --input-path-meta foo.meta \
-        foo.1.png output_directory
+        foo.tim.1.png output_directory
+
+This previous command automatically search palette and meta files
+in foo.tim.palette.png and foo.tim.meta, but you can set custom
+paths like this:
+
+    tim --if png --of tim \
+        --input-path-palette foo.tim.palette.png \
+        --input-path-meta foo.tim.meta \
+        foo.tim.1.png output_directory
 
 ### Convert a texture to another
 
