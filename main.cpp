@@ -77,7 +77,7 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 			}
 		}
 
-		if (args.exportPalettes() && texture->depth() < 16) {
+		if (args.exportPalettes() && texture->depth() < 16) { // Do not use isPaletted for that!
 			QImage palette = texture->palette();
 			if (!palette.isNull()) {
 				QString destPathPalette = args.destinationPalette(path, num);
@@ -100,7 +100,8 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 
 bool toTexture(TextureFile *texture, const QString &path, const Arguments &args, int num = -1)
 {
-	QString pathMeta = args.inputPathMeta(path);
+	QString pathMeta = args.inputPathMeta(path),
+	        pathPalette = args.inputPathPalette(path);
 
 	if (pathMeta.isEmpty()) {
 		qWarning() << "Error: Please set the input path meta";
@@ -125,6 +126,26 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args,
 		goto toTextureError;
 	}
 	tex->setExtraData(meta);
+
+	// Not texture to texture
+	if (args.outputFormat().compare(args.inputFormat(path)) != 0
+	        && tex->depth() < 16) { // Do not use isPaletted for that!
+		if (pathPalette.isEmpty()) {
+			qWarning() << "Error: Please set the input path palette";
+			return false;
+		}
+
+		QImage paletteImage;
+		if (paletteImage.load(pathPalette)) {
+			if (!tex->setPalette(paletteImage)) {
+				qWarning() << "Error: Please set the depth in the meta file";
+				return false;
+			}
+		} else {
+			qWarning() << "Error: Cannot open the input palette";
+			return false;
+		}
+	}
 
 	destPath = args.destination(path, num);
 

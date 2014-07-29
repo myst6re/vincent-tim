@@ -179,6 +179,11 @@ bool TexFile::save(QByteArray &data) const
 	return true;
 }
 
+void TexFile::setDepth(quint8 depth)
+{
+	TextureFile::setDepth(depth);
+}
+
 QVector<quint8> TexFile::alpha() const
 {
 	QVector<quint8> ret;

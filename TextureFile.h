@@ -54,9 +54,10 @@ public:
 	void setColorTable(int id, const QVector<QRgb> &colorTable);
 	int colorTableCount() const;
 	virtual quint8 depth() const=0;
+	virtual void setDepth(quint8 depth);
 	QImage palette() const;
-	void setPalette(const QImage &image);
-	int nbColorsPerPalette() const;
+	bool setPalette(const QImage &image);
+	quint16 colorPerPal() const;
 	virtual QSize paletteSize() const;
 	virtual QVector<quint8> alpha() const;
 	virtual void setAlpha(const QVector<quint8> &alpha);
@@ -66,9 +67,7 @@ public:
 	static QStringList supportedTextureFormats();
 protected:
 	virtual void setPaletteSize(const QSize &size);
-	virtual inline quint16 colorPerPal() const {
-		return 256;
-	}
+
 	QImage _image;
 	QList< QVector<QRgb> > _colorTables;
 	int _currentColorTable;

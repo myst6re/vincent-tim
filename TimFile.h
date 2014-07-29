@@ -38,6 +38,7 @@ public:
 		}
 		return bpp * 8;
 	}
+	void setDepth(quint8 depth);
 	inline quint16 paletteX() const {
 		return palX;
 	}
@@ -62,7 +63,6 @@ public:
 
 	QSize paletteSize() const;
 	void setPaletteSize(const QSize &size);
-	virtual inline quint16 colorPerPal() const;
 
 	QVector<quint8> alpha() const;
 	void setAlpha(const QVector<quint8> &alpha);
@@ -70,7 +70,6 @@ public:
 	static TimFile fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette = QImage());
 	static QList<PosSize> findTims(const QByteArray &data, int limit = 0);
 private:
-	void setDepth(quint8 depth);
 	quint8 bpp;
 	quint16 palX, palY;
 	quint16 palW, palH;

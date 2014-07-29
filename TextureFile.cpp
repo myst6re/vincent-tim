@@ -189,10 +189,14 @@ QImage TextureFile::palette() const
 	return image;
 }
 
-void TextureFile::setPalette(const QImage &image)
+bool TextureFile::setPalette(const QImage &image)
 {
 	QVector<QRgb> colorTable;
 	quint16 colorPerPal = this->colorPerPal();
+
+	if (colorPerPal == 0) {
+		return false;
+	}
 
 	_colorTables.clear();
 
@@ -211,6 +215,8 @@ void TextureFile::setPalette(const QImage &image)
 	}
 
 	setPaletteSize(image.size());
+
+	return true;
 }
 
 QVector<quint8> TextureFile::alpha() const
@@ -273,7 +279,7 @@ setAlphaImageEnd:
 	setAlpha(a);
 }
 
-int TextureFile::nbColorsPerPalette() const
+quint16 TextureFile::colorPerPal() const
 {
 	if (_colorTables.isEmpty()) {
 		return 0;
@@ -284,12 +290,19 @@ int TextureFile::nbColorsPerPalette() const
 
 QSize TextureFile::paletteSize() const
 {
-	return QSize(16, (nbColorsPerPalette() / 16) * colorTableCount());
+	return QSize(16, (colorPerPal() / 16) * colorTableCount());
 }
 
 void TextureFile::setPaletteSize(const QSize &size)
 {
 	Q_UNUSED(size);
+}
+
+void TextureFile::setDepth(quint8 depth)
+{
+	if (this->depth() != depth) {
+		// TODO
+	}
 }
 
 void TextureFile::debug() const
