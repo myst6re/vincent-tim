@@ -165,7 +165,7 @@ QImage TextureFile::palette() const
 	const int maxWidth = image.width() - 1,
 	        maxHeight = image.height() - 1;
 
-	image.fill(Qt::black);
+	image.fill(Qt::transparent);
 
 	y = 0;
 	foreach (const QVector<QRgb> &colorTable, _colorTables) {
