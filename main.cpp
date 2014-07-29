@@ -165,6 +165,11 @@ int main(int argc, char *argv[])
 		foreach (const QString &path, args.paths()) {
 			TextureFile *texture;
 
+			if (args.inputFormat(path) == args.outputFormat()) {
+				qWarning() << "Error: input and output formats are not different";
+				a.exit(1);
+			}
+
 			QFile f(path);
 			if (f.open(QIODevice::ReadOnly)) {
 
@@ -180,13 +185,15 @@ int main(int argc, char *argv[])
 							fromTexture(texture, path, args);
 						} else {
 							qWarning() << "Error: input format or output format must be a supported texture format" << TextureFile::supportedTextureFormats();
+							a.exit(1);
 						}
 					} else {
 						qWarning() << "Error: Cannot open Texture file";
+						a.exit(1);
 					}
 
 					f.close();
-					
+
 					delete texture;
 				} else { // Search tim files
 					QByteArray data = f.readAll();
@@ -206,12 +213,14 @@ int main(int argc, char *argv[])
 							}
 						} else {
 							qWarning() << "Error: Cannot open Texture file";
+							a.exit(1);
 						}
 						delete texture;
 					}
 				}
 			} else {
 				qWarning() << "Error: cannot open file" << path << f.errorString();
+				a.exit(1);
 			}
 		}
 	}
