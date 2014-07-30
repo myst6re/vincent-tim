@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 	QCoreApplication::setApplicationName("tim");
-	QCoreApplication::setApplicationVersion("1.0");
+	QCoreApplication::setApplicationVersion("1.1");
 #ifdef Q_OS_WIN
 	QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
 #endif
