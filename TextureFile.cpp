@@ -192,7 +192,7 @@ QImage TextureFile::palette() const
 bool TextureFile::setPalette(const QImage &image)
 {
 	QVector<QRgb> colorTable;
-	quint16 colorPerPal = this->colorPerPal();
+	quint16 colorPerPal = colorPerPalFromDepth();
 
 	if (colorPerPal == 0) {
 		return false;
@@ -286,6 +286,18 @@ quint16 TextureFile::colorPerPal() const
 	}
 
 	return _colorTables.first().size();
+}
+
+quint16 TextureFile::colorPerPalFromDepth() const
+{
+	switch(depth()) {
+	case 4:
+		return 16;
+	case 8:
+		return 256;
+	default:
+		return 0;
+	}
 }
 
 QSize TextureFile::paletteSize() const

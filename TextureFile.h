@@ -66,6 +66,7 @@ public:
 	void debug() const;
 	static QStringList supportedTextureFormats();
 protected:
+	quint16 colorPerPalFromDepth() const;
 	virtual void setPaletteSize(const QSize &size);
 
 	QImage _image;
