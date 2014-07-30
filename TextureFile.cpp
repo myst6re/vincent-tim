@@ -234,6 +234,7 @@ bool TextureFile::convertToIndexedFormat(int colorTableId)
 				newData[i] = index;
 				continue;
 			} else if (qAlpha(data[i]) == 0) {
+				// qRgba(a, b, c, 0) where a, b and c = [0..255] are the same color
 				index = 0;
 				foreach (QRgb color, colors) {
 					if (qAlpha(color) == 0) {
