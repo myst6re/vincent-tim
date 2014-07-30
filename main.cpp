@@ -32,7 +32,7 @@ bool saveTextureTo(TextureFile *texture, const QString &destPath)
 		return false;
 	}
 
-	printf("%s\n", qPrintable(destPath));
+	printf("%s\n", qPrintable(QDir::toNativeSeparators(destPath)));
 	return true;
 }
 
@@ -72,7 +72,7 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 					qWarning() << "Error: Cannot save extra data";
 					return;
 				} else {
-					printf("%s\n", qPrintable(destPathMeta));
+					printf("%s\n", qPrintable(QDir::toNativeSeparators(destPathMeta)));
 				}
 			}
 		}
@@ -85,7 +85,7 @@ void fromTexture(TextureFile *texture, const QString &path, const Arguments &arg
 					qWarning() << "Error: Cannot save palette";
 					return;
 				}
-				printf("%s\n", qPrintable(destPathPalette));
+				printf("%s\n", qPrintable(QDir::toNativeSeparators(destPathPalette)));
 			} else {
 				qWarning() << "Warning: No palette to export";
 				return;
@@ -122,7 +122,7 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args,
 
 	ExtraData meta;
 	if (!meta.open(pathMeta)) {
-		qWarning() << "Meta data not found!" << pathMeta;
+		qWarning() << "Meta data not found!" << QDir::toNativeSeparators(pathMeta);
 		goto toTextureError;
 	}
 	tex->setExtraData(meta);
@@ -163,7 +163,7 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args,
 		goto toTextureError;
 	}
 
-	printf("%s\n", qPrintable(destPath));
+	printf("%s\n", qPrintable(QDir::toNativeSeparators(destPath)));
 
 	delete tex;
 	return true;
@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 					}
 				}
 			} else {
-				qWarning() << "Error: cannot open file" << path << f.errorString();
+				qWarning() << "Error: cannot open file" << QDir::toNativeSeparators(path) << f.errorString();
 				a.exit(1);
 			}
 		}
