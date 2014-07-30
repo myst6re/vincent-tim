@@ -165,7 +165,7 @@ QImage TextureFile::palette() const
 	const int maxWidth = image.width() - 1,
 	        maxHeight = image.height() - 1;
 
-	image.fill(Qt::transparent);
+	image.fill(Qt::black);
 
 	y = 0;
 	foreach (const QVector<QRgb> &colorTable, _colorTables) {
@@ -216,6 +216,42 @@ bool TextureFile::setPalette(const QImage &image)
 
 	setPaletteSize(image.size());
 
+	return true;
+}
+
+bool TextureFile::convertToIndexedFormat(int colorTableId)
+{
+	QVector<QRgb> colors = colorTable(colorTableId);
+	if (_image.depth() == 32) {
+		QImage newImage(_image.size(), QImage::Format_Indexed8);
+		QRgb *data = (QRgb *)_image.bits();
+		uchar *newData = newImage.bits();
+		int dataSize = _image.width() * _image.height();
+
+		for (int i=0; i<dataSize; ++i) {
+			int index = colors.indexOf(data[i]);
+			if (index >= 0) {
+				newData[i] = index;
+				continue;
+			} else if (qAlpha(data[i]) == 0) {
+				index = 0;
+				foreach (QRgb color, colors) {
+					if (qAlpha(color) == 0) {
+						newData[i] = index;
+						break;
+					}
+					index++;
+				}
+				continue;
+			}
+
+			return false;
+		}
+
+		_image = newImage;
+	} else {
+		_image = _image.convertToFormat(QImage::Format_Indexed8, colors);
+	}
 	return true;
 }
 

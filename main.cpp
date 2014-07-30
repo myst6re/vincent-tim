@@ -28,7 +28,7 @@
 
 bool saveTextureTo(TextureFile *texture, const QString &destPath)
 {
-	if (!texture->image().save(destPath)) {
+	if (!texture->image().convertToFormat(QImage::Format_ARGB32).save(destPath)) {
 		return false;
 	}
 
@@ -139,6 +139,16 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args,
 		if (paletteImage.load(pathPalette)) {
 			if (!tex->setPalette(paletteImage)) {
 				qWarning() << "Error: Please set the depth in the meta file";
+				return false;
+			}
+
+			if (args.palette() < 0 || args.palette() >= tex->colorTableCount()) {
+				qWarning() << "Error: Please set a valid number of palette";
+				return false;
+			}
+
+			if (!tex->convertToIndexedFormat(args.palette())) {
+				qWarning() << "Error: Colors in the image does not match with the palette, have you changed some colors?";
 				return false;
 			}
 		} else {
