@@ -175,7 +175,7 @@ toTextureError:
 int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
-	QCoreApplication::setApplicationName("tim");
+	QCoreApplication::setApplicationName("Vincent Tim");
 	QCoreApplication::setApplicationVersion("1.1");
 #ifdef Q_OS_WIN
 	QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
