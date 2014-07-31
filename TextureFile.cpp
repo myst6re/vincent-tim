@@ -219,41 +219,20 @@ bool TextureFile::setPalette(const QImage &image)
 	return true;
 }
 
-bool TextureFile::convertToIndexedFormat(int colorTableId)
+void TextureFile::convertToIndexedFormat(int colorTableId)
 {
 	QVector<QRgb> colors = colorTable(colorTableId);
-	if (_image.depth() == 32) {
-		QImage newImage(_image.size(), QImage::Format_Indexed8);
-		QRgb *data = (QRgb *)_image.bits();
-		uchar *newData = newImage.bits();
-		int dataSize = _image.width() * _image.height();
 
-		for (int i=0; i<dataSize; ++i) {
-			int index = colors.indexOf(data[i]);
-			if (index >= 0) {
-				newData[i] = index;
-				continue;
-			} else if (qAlpha(data[i]) == 0) {
-				// qRgba(a, b, c, 0) where a, b and c = [0..255] are the same color
-				index = 0;
-				foreach (QRgb color, colors) {
-					if (qAlpha(color) == 0) {
-						newData[i] = index;
-						break;
-					}
-					index++;
-				}
-				continue;
-			}
-
-			return false;
+	// Fixing error with alpha
+	QMutableVectorIterator<QRgb> it(colors);
+	while(it.hasNext()) {
+		QRgb color = it.next();
+		if (qAlpha(color) == 0 && color != qRgba(0, 0, 0, 0)) {
+			it.setValue(qRgba(0, 0, 0, 0));
 		}
-
-		_image = newImage;
-	} else {
-		_image = _image.convertToFormat(QImage::Format_Indexed8, colors);
 	}
-	return true;
+
+	_image = _image.convertToFormat(QImage::Format_Indexed8, colors);
 }
 
 QVector<quint8> TextureFile::alpha() const

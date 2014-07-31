@@ -57,7 +57,7 @@ public:
 	virtual void setDepth(quint8 depth);
 	QImage palette() const;
 	bool setPalette(const QImage &image);
-	bool convertToIndexedFormat(int colorTableId);
+	void convertToIndexedFormat(int colorTableId);
 	quint16 colorPerPal() const;
 	virtual QSize paletteSize() const;
 	virtual QVector<quint8> alpha() const;

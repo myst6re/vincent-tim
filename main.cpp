@@ -147,10 +147,7 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args,
 				return false;
 			}
 
-			if (!tex->convertToIndexedFormat(args.palette())) {
-				qWarning() << "Error: Colors in the image does not match with the palette, have you changed some colors?";
-				return false;
-			}
+			tex->convertToIndexedFormat(args.palette());
 		} else {
 			qWarning() << "Error: Cannot open the input palette";
 			return false;
