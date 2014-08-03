@@ -94,12 +94,12 @@ public:
 		One = 1, Two = 2
 	};
 
-	TexFile();
+	TexFile(Version version = One, bool hasAlpha = true, bool fourBitsPerIndex = false);
 	TexFile(const TextureFile &textureFile, const TexStruct &header,
 			const QVector<quint8> &colorKeyArray=QVector<quint8>());
-	TexFile(const TextureFile &textureFile, Version version, bool hasAlpha, bool fourBitsPerIndex=false,
+	TexFile(const TextureFile &textureFile, Version version, bool hasAlpha,
 			const QVector<quint8> &colorKeyArray=QVector<quint8>());
-	TexFile(const TextureFile &texture);
+	TexFile(const TextureFile &textureFile);
 	bool open(const QByteArray &data);
 	bool save(QByteArray &data) const;
 	inline quint8 depth() const {
