@@ -1,3 +1,19 @@
+/****************************************************************************
+ ** Copyright (C) 2009-2012 Arzel Jérôme <myst6re@gmail.com>
+ **
+ ** This program is free software: you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, either version 3 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ ****************************************************************************/
 #include "Arguments.h"
 #include <QCoreApplication>
 #include <QDir>
@@ -98,14 +114,38 @@ QString Arguments::destinationPalette(const QString &source, int num) const
 	return destinationPath(source, "palette." + outputFormat(), num);
 }
 
-QString Arguments::inputPathPalette() const
+QString Arguments::searchRelatedFile(const QString &inputPathImage, const QString &extension) const
 {
-	return _parser.value("input-path-palette");
+	int indexInputExtension;
+	QString inputPathTruncated = inputPathImage;
+
+	while ((indexInputExtension = inputPathTruncated.lastIndexOf('.')) >= 0) {
+		inputPathTruncated.truncate(indexInputExtension);
+		if (QFile::exists(inputPathTruncated + "." + extension)) {
+			return inputPathTruncated + "." + extension;
+		}
+	}
+
+	return QString();
 }
 
-QString Arguments::inputPathMeta() const
+QString Arguments::inputPathPalette(const QString &inputPathImage) const
 {
-	return _parser.value("input-path-meta");
+	QString palette = _parser.value("input-path-palette");
+	if (palette.isEmpty()) {
+		QString inputExtension = inputPathImage.mid(inputPathImage.lastIndexOf("."));
+		return searchRelatedFile(inputPathImage, "palette" + inputExtension);
+	}
+	return palette;
+}
+
+QString Arguments::inputPathMeta(const QString &inputPathImage) const
+{
+	QString meta = _parser.value("input-path-meta");
+	if (meta.isEmpty()) {
+		return searchRelatedFile(inputPathImage, "meta");
+	}
+	return meta;
 }
 
 bool Arguments::exportPalettes() const

@@ -7,7 +7,7 @@ Features
 --------
 
 The main purpose of this software is to export and reimport a texture image
-to be able to modify this texture with a image editor software.
+to be able to modify this texture with an image editor.
 
 But it is also possible to search and extract tim files from a file, and
 convert tim files to tex files and vice versa.
@@ -32,13 +32,22 @@ not exportable in a simple image file.
 
 ### Import png file to a texture
 
-You do not need to import all the exported images, just the modified one. But to
-import you must have exported the palette and the meta data.
+You do not need to import all the exported images, just the modified one, and
+you must specify (with -p) the palette number used for this image (it's indicated in the filename).
+But to import you must have exported the palette and the meta data with the "-e" flag.
 
     tim --if png --of tim \
-        --input-path-palette foo.palette.png \
-        --input-path-meta foo.meta \
-        foo.1.png output_directory
+        -p 1 foo.tim.1.png output_directory
+
+This previous command automatically search palette and meta files
+in foo.tim.palette.png and foo.tim.meta, but you can set custom
+paths like this:
+
+    tim --if png --of tim \
+        -p 1 \
+        --input-path-palette foo.tim.palette.png \
+        --input-path-meta foo.tim.meta \
+        foo.tim.1.png output_directory
 
 ### Convert a texture to another
 

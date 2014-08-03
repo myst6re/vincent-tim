@@ -300,6 +300,18 @@ bool TimFile::save(QByteArray &data) const
 	return true;
 }
 
+QVector<quint8> TimFile::alpha() const
+{
+	// TODO
+	return TextureFile::alpha();
+}
+
+void TimFile::setAlpha(const QVector<quint8> &alpha)
+{
+	TextureFile::setAlpha(alpha);
+	// TODO
+}
+
 void TimFile::setDepth(quint8 depth)
 {
 	if (depth < 8) {
@@ -324,14 +336,14 @@ bool TimFile::setExtraData(const ExtraData &extraData)
 {
 	bool ok;
 	QMap<QString, QVariant> fields = extraData.fields();
-	//quint8 depth = 255;
+	quint8 depth = 255;
 
 	setExtraDataFieldUsed(fields);
 
-	/*setExtraDataField(depth, "depth");
+	setExtraDataField(depth, "depth");
 	if (depth != 255) {
 		setDepth(depth);
-	}*/
+	}
 	setExtraDataField(palX, "paletteX");
 	setExtraDataField(palY, "paletteY");
 	setExtraDataField(imgX, "imageX");
@@ -349,11 +361,6 @@ void TimFile::setPaletteSize(const QSize &size)
 {
 	palW = size.width();
 	palH = size.height();
-}
-
-quint16 TimFile::colorPerPal() const
-{
-	return bpp == 0 ? 16 : 256;
 }
 
 TimFile TimFile::fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette)

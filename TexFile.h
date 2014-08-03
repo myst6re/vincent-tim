@@ -105,18 +105,19 @@ public:
 	inline quint8 depth() const {
 		return _header.bitDepth;
 	}
+	void setDepth(quint8 depth);
 	void debug();
 	
 	ExtraData extraData() const;
 	bool setExtraData(const ExtraData &extraData);
 
-	virtual inline quint16 colorPerPal() const {
-		return _header.nbColorsPerPalette1;
-	}
 	inline TexStruct header() const {
 		return _header;
 	}
 	void setHeader(Version version, bool hasAlpha, bool fourBitsPerIndex=false);
+
+	QVector<quint8> alpha() const;
+	void setAlpha(const QVector<quint8> &alpha);
 private:
 	TexStruct _header;
 	QVector<quint8> colorKeyArray;

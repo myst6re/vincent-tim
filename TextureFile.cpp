@@ -160,7 +160,7 @@ QImage TextureFile::palette() const
 		return QImage();
 	}
 
-	QImage image(paletteSize(), QImage::Format_RGB32);
+	QImage image(paletteSize(), QImage::Format_ARGB32);
 	int x, y;
 	const int maxWidth = image.width() - 1,
 	        maxHeight = image.height() - 1;
@@ -189,10 +189,14 @@ QImage TextureFile::palette() const
 	return image;
 }
 
-void TextureFile::setPalette(const QImage &image)
+bool TextureFile::setPalette(const QImage &image)
 {
 	QVector<QRgb> colorTable;
-	quint16 colorPerPal = this->colorPerPal();
+	quint16 colorPerPal = colorPerPalFromDepth();
+
+	if (colorPerPal == 0) {
+		return false;
+	}
 
 	_colorTables.clear();
 
@@ -211,9 +215,87 @@ void TextureFile::setPalette(const QImage &image)
 	}
 
 	setPaletteSize(image.size());
+
+	return true;
 }
 
-int TextureFile::nbColorsPerPalette() const
+void TextureFile::convertToIndexedFormat(int colorTableId)
+{
+	QVector<QRgb> colors = colorTable(colorTableId);
+
+	// Fixing error with alpha
+	QMutableVectorIterator<QRgb> it(colors);
+	while(it.hasNext()) {
+		QRgb color = it.next();
+		if (qAlpha(color) == 0 && color != qRgba(0, 0, 0, 0)) {
+			it.setValue(qRgba(0, 0, 0, 0));
+		}
+	}
+
+	_image = _image.convertToFormat(QImage::Format_Indexed8, colors);
+}
+
+QVector<quint8> TextureFile::alpha() const
+{
+	return QVector<quint8>();
+}
+
+void TextureFile::setAlpha(const QVector<quint8> &alpha)
+{
+	Q_UNUSED(alpha);
+}
+
+QImage TextureFile::alphaImage() const
+{
+	QVector<quint8> a = alpha();
+
+	if (a.isEmpty()) {
+		return QImage();
+	}
+
+	QImage image(16, a.size() / 16 + a.size() % 16, QImage::Format_Indexed8);
+	int x = 0, y = 0, i = 0;
+
+	image.setColor(0, Qt::black);
+	image.setColor(1, Qt::white);
+	image.setColor(2, Qt::red);
+	image.fill(0);
+
+	for (; y < image.height() && i < a.size(); ++y) {
+		for (x = 0; x < image.width() && i < a.size(); ++x) {
+			if (a.at(i++)) {
+				image.setPixel(x, y, 1);
+			}
+		}
+	}
+
+	if (x < image.width() || y < image.height()) {
+		image.setPixel(x, y, 2);
+	}
+
+	return image;
+}
+
+void TextureFile::setAlphaImage(const QImage &image)
+{
+	QVector<quint8> a;
+
+	for (int y = 0; y < image.height(); ++y) {
+		for (int x = 0; x < image.width(); ++x) {
+			QRgb pixel = image.pixel(x, y);
+			if (pixel == Qt::red) {
+				goto setAlphaImageEnd;
+			} else {
+				a.append(pixel == Qt::white);
+			}
+		}
+	}
+
+setAlphaImageEnd:
+	setAlpha(a);
+}
+
+quint16 TextureFile::colorPerPal() const
 {
 	if (_colorTables.isEmpty()) {
 		return 0;
@@ -222,14 +304,33 @@ int TextureFile::nbColorsPerPalette() const
 	return _colorTables.first().size();
 }
 
+quint16 TextureFile::colorPerPalFromDepth() const
+{
+	switch(depth()) {
+	case 4:
+		return 16;
+	case 8:
+		return 256;
+	default:
+		return 0;
+	}
+}
+
 QSize TextureFile::paletteSize() const
 {
-	return QSize(16, (nbColorsPerPalette() / 16) * colorTableCount());
+	return QSize(16, (colorPerPal() / 16) * colorTableCount());
 }
 
 void TextureFile::setPaletteSize(const QSize &size)
 {
 	Q_UNUSED(size);
+}
+
+void TextureFile::setDepth(quint8 depth)
+{
+	if (this->depth() != depth) {
+		// TODO
+	}
 }
 
 void TextureFile::debug() const

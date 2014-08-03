@@ -107,6 +107,7 @@ bool TexFile::open(const QByteArray &data)
 		if(_header.hasColorKeyArray) {
 			quint32 colorKeyStart = imageStart + imageSectionSize;
 
+			colorKeyArray.clear();
 			for(quint32 j=0 ; j<_header.nbPalettes ; ++j) {
 				colorKeyArray.append(data.at(colorKeyStart+j));
 			}
@@ -135,7 +136,7 @@ bool TexFile::save(QByteArray &data) const
 {
 	data.append((char *)&_header, _header.version>=2 ? sizeof(TexStruct) : sizeof(TexStruct) - 4);
 
-	qDebug() << "texSize header" << data.size();
+	// qDebug() << "texSize header" << data.size();
 
 	if(isPaletted()) {
 		quint32 palID;
@@ -152,7 +153,7 @@ bool TexFile::save(QByteArray &data) const
 			}
 		}
 
-		qDebug() << "texSize palettes" << data.size() << _image.height() << _image.width();
+		// qDebug() << "texSize palettes" << data.size() << _image.height() << _image.width();
 
 		for(int y=0 ; y<_image.height() ; ++y) {
 			for(int x=0 ; x<_image.width() ; ++x) {
@@ -160,11 +161,11 @@ bool TexFile::save(QByteArray &data) const
 			}
 		}
 
-		qDebug() << "texSize data" << data.size();
+		// qDebug() << "texSize data" << data.size();
 
 		data.append((char *)colorKeyArray.data(), colorKeyArray.size());
 
-		qDebug() << "texSize colorKey" << data.size();
+		// qDebug() << "texSize colorKey" << data.size();
 	} else {
 		QRgb *pixels = (QRgb *)_image.bits();
 		for(int i=0 ; i<_image.width()*_image.height() ; ++i) {
@@ -172,10 +173,32 @@ bool TexFile::save(QByteArray &data) const
 			data.append((char *)&color, 2);
 		}
 
-		qDebug() << "texSize data" << data.size();
+		// qDebug() << "texSize data" << data.size();
 	}
 
 	return true;
+}
+
+void TexFile::setDepth(quint8 depth)
+{
+	TextureFile::setDepth(depth);
+}
+
+QVector<quint8> TexFile::alpha() const
+{
+	QVector<quint8> ret;
+	foreach (quint8 colorKey, colorKeyArray) {
+		ret.append(colorKey);
+	}
+	return ret;
+}
+
+void TexFile::setAlpha(const QVector<quint8> &alpha)
+{
+	colorKeyArray.clear();
+	foreach (quint8 a, alpha) {
+		colorKeyArray.append(a);
+	}
 }
 
 void TexFile::setHeader(Version version, bool hasAlpha, bool fourBitsPerIndex)
