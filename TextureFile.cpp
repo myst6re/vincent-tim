@@ -232,6 +232,17 @@ void TextureFile::convertToIndexedFormat(int colorTableId)
 		}
 	}
 
+	if (_image.format() == QImage::Format_ARGB32) {
+		QRgb *pixels = (QRgb *)_image.bits();
+		for (int i=0; i<_image.height() * _image.width(); ++i) {
+			QRgb color = *pixels;
+			if (qAlpha(color) == 0 && color != qRgba(0, 0, 0, 0)) {
+				*pixels = qRgba(0, 0, 0, 0);
+			}
+			pixels++;
+		}
+	}
+
 	_image = _image.convertToFormat(QImage::Format_Indexed8, colors);
 }
 
