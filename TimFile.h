@@ -62,7 +62,6 @@ public:
 	bool setExtraData(const ExtraData &extraData);
 
 	QSize paletteSize() const;
-	void setPaletteSize(const QSize &size);
 
 	QVector<quint8> alpha() const;
 	void setAlpha(const QVector<quint8> &alpha);
@@ -70,10 +69,13 @@ public:
 	static TimFile fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette = QImage());
 	static QList<PosSize> findTims(const QByteArray &data, int limit = 0);
 private:
+	void setPaletteSize(const QSize &size);
+
 	quint8 bpp;
 	quint16 palX, palY;
 	quint16 palW, palH;
 	quint16 imgX, imgY;
+	QList<QBitArray> _alphaBits;
 };
 
 #endif // TIMFILE_H

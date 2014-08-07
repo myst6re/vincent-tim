@@ -55,6 +55,7 @@ bool TimFile::open(const QByteArray &data)
 		return false;
 
 	_colorTables.clear();
+	_alphaBits.clear();
 
 	if(hasPal)
 	{
@@ -86,13 +87,16 @@ bool TimFile::open(const QByteArray &data)
 			for(int i=0 ; i<nbPal ; ++i)
 			{
 				QVector<QRgb> pal;
+				QBitArray alphaBits(onePalSize);
 
 				for(quint16 j=0 ; j<onePalSize ; ++j) {
 					memcpy(&color, constData + 20 + pos*2 + j*2, 2);
 					pal.append(PsColor::fromPsColor(color, true));
+					alphaBits.setBit(j, psColorAlphaBit(color));
 				}
 
 				_colorTables.append(pal);
+				_alphaBits.append(alphaBits);
 
 				pos += pos % palW == 0 ? onePalSize : palW - onePalSize;
 			}
@@ -179,10 +183,13 @@ bool TimFile::open(const QByteArray &data)
 	}
 	else if(bpp==2)
 	{
+		QBitArray alphaBits;
+
 		while(i<size && y<h)
 		{
 			memcpy(&color, constData + 20 + palSize + i, 2);
 			pixels[x + y*w] = PsColor::fromPsColor(color, true);
+			alphaBits.setBit(i / 2, psColorAlphaBit(color));
 
 			++x;
 			if(x==w)
@@ -192,6 +199,8 @@ bool TimFile::open(const QByteArray &data)
 			}
 			i+=2;
 		}
+
+		_alphaBits.append(alphaBits);
 	}
 	else if(bpp==3)
 	{
@@ -216,6 +225,8 @@ bool TimFile::open(const QByteArray &data)
 
 bool TimFile::save(QByteArray &data) const
 {
+	Q_ASSERT(_colorTables.size() == _alphaBits.size());
+
 	bool hasPal = isPaletted();
 	quint32 flag = (hasPal << 3) | (bpp & 3);
 
@@ -233,15 +244,21 @@ bool TimFile::save(QByteArray &data) const
 		data.append((char *)&palW, 2);
 		data.append((char *)&palH, 2);
 
+		int colorTableId = 0;
 		foreach(const QVector<QRgb> &colorTable, _colorTables) {
+			const QBitArray &alphaBit = _alphaBits.at(colorTableId);
 			int i;
-			for(i=0 ; i<colorTable.size() && i<colorPerPal ; ++i) {
+
+			Q_ASSERT(colorTable.size() == colorPerPal);
+			Q_ASSERT(alphaBit.size() == colorPerPal);
+
+			for(i=0 ; i<colorPerPal ; ++i) {
 				quint16 psColor = PsColor::toPsColor(colorTable.at(i));
+				setPsColorAlphaBit(psColor, alphaBit.at(i));
 				data.append((char *)&psColor, 2);
 			}
-			if(i<colorPerPal) {
-				data.append(QByteArray(colorPerPal - i, '\0'));
-			}
+
+			++colorTableId;
 		}
 
 		quint16 width = _image.width(), height = _image.height();
@@ -276,6 +293,7 @@ bool TimFile::save(QByteArray &data) const
 	} else {
 		quint16 width = _image.width(), height = _image.height();
 		quint32 sizeImgSection = 12 + width * bpp * height;
+		const QBitArray &alphaBit = _alphaBits.first();
 
 		data.append((char *)&sizeImgSection, 4);
 		data.append((char *)&imgX, 2);
@@ -287,6 +305,7 @@ bool TimFile::save(QByteArray &data) const
 			for(int x=0 ; x<width ; ++x) {
 				if(bpp == 2) {
 					quint16 color = PsColor::toPsColor(_image.pixel(x, y));
+					setPsColorAlphaBit(color, alphaBit.at(y * width + x));
 					data.append((char *)&color, 2);
 				} else {
 					QRgb c = _image.pixel(x, y);
