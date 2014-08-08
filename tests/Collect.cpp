@@ -45,13 +45,6 @@ void Collect::textureData(const QString &format) const
 					occurrences.insert(it.key(), counts);
 				}
 			}
-
-			foreach (quint8 a, tex->alpha()) {
-				QMap<quint32, int> counts = occurrences.value("_alpha");
-				int count = counts.value(a, 0);
-				counts.insert(a, count + 1);
-				occurrences.insert("_alpha", counts);
-			}
 		} else {
 			qDebug() << texFilename << "cannot open file";
 		}

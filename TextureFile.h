@@ -60,15 +60,17 @@ public:
 	void convertToIndexedFormat(int colorTableId);
 	quint16 colorPerPal() const;
 	virtual QSize paletteSize() const;
-	virtual QVector<quint8> alpha() const;
-	virtual void setAlpha(const QVector<quint8> &alpha);
-	QImage alphaImage() const;
-	void setAlphaImage(const QImage &image);
 	void debug() const;
 	static QStringList supportedTextureFormats();
 protected:
 	quint16 colorPerPalFromDepth() const;
 	virtual void setPaletteSize(const QSize &size);
+	virtual inline QList< QVector<QRgb> > exportColorTables() const {
+		return _colorTables;
+	}
+	virtual inline void importColorTables(const QList< QVector<QRgb> > &colorTables) {
+		_colorTables = colorTables;
+	}
 
 	QImage _image;
 	QList< QVector<QRgb> > _colorTables;

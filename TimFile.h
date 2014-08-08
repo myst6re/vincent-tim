@@ -63,13 +63,12 @@ public:
 
 	QSize paletteSize() const;
 
-	QVector<quint8> alpha() const;
-	void setAlpha(const QVector<quint8> &alpha);
-
 	static TimFile fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette = QImage());
 	static QList<PosSize> findTims(const QByteArray &data, int limit = 0);
 private:
 	void setPaletteSize(const QSize &size);
+	QList< QVector<QRgb> > exportColorTables() const;
+	void importColorTables(const QList< QVector<QRgb> > &colorTables);
 
 	quint8 bpp;
 	quint16 palX, palY;

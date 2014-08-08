@@ -319,18 +319,6 @@ bool TimFile::save(QByteArray &data) const
 	return true;
 }
 
-QVector<quint8> TimFile::alpha() const
-{
-	// TODO
-	return TextureFile::alpha();
-}
-
-void TimFile::setAlpha(const QVector<quint8> &alpha)
-{
-	TextureFile::setAlpha(alpha);
-	// TODO
-}
-
 void TimFile::setDepth(quint8 depth)
 {
 	if (depth < 8) {
@@ -380,6 +368,63 @@ void TimFile::setPaletteSize(const QSize &size)
 {
 	palW = size.width();
 	palH = size.height();
+}
+
+QList< QVector<QRgb> > TimFile::exportColorTables() const
+{
+	QList< QVector<QRgb> > ret;
+	QListIterator<QBitArray> alphaIt(_alphaBits);
+
+	Q_ASSERT(_alphaBits.size() == _colorTables.size());
+
+	foreach (QVector<QRgb> colorTable, _colorTables) {
+		const QBitArray &alphaBits = alphaIt.next();
+
+		Q_ASSERT(alphaBits.size() == colorTable.size());
+
+		for (int i=0; i<colorTable.size(); ++i) {
+			const QRgb &color = colorTable[i];
+			int alpha = qAlpha(color);
+			if (alpha == 255) { // Opaque
+				if (alphaBits.at(i)) {
+					alpha = 127; // Semi-transparent
+				}
+			}
+			colorTable[i] = qRgba(qRed(color), qGreen(color), qBlue(color), alpha);
+		}
+
+		ret << colorTable;
+	}
+
+	return ret;
+}
+
+void TimFile::importColorTables(const QList< QVector<QRgb> > &colorTables)
+{
+	_colorTables.clear();
+
+	foreach (QVector<QRgb> colorTable, colorTables) {
+		QBitArray alphaBits(colorTable.size(), false);
+
+		for (int i=0; i<colorTable.size(); ++i) {
+			QRgb color = colorTable[i];
+			int alpha = qAlpha(color);
+
+			if (alpha == 0) { // Fully-transparent
+				color = qRgba(0, 0, 0, 0);
+			} else if (alpha == 127) { // Semi-transparent
+				color = qRgba(qRed(color), qGreen(color), qBlue(color), 255);
+				alphaBits.setBit(i, true);
+			} else {
+				color = qRgba(qRed(color), qGreen(color), qBlue(color), 255);
+			}
+
+			colorTable[i] = color;
+		}
+
+		_colorTables << colorTable;
+		_alphaBits << alphaBits;
+	}
 }
 
 TimFile TimFile::fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette)
