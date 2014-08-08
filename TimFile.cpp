@@ -43,12 +43,17 @@ bool TimFile::open(const QByteArray &data)
 	if(!data.startsWith(QByteArray("\x10\x00\x00\x00", 4)) || dataSize < 8)		return false;
 
 //	quint8 tag = (quint8)data.at(0);
-//	quint8 version = (quint8)data.at(1);
+#ifdef TIMFILE_EXTRACT_UNUSED_DATA
+	_version = (quint8)data.at(1);
+	memcpy(&_headerUnused1, constData + 2, 2);
+	memcpy(&_headerUnused2, constData + 4, 4);
+	_headerUnused2 &= 0xFFF8;
+#endif
 	bpp = (quint8)data.at(4) & 3;
 	hasPal = ((quint8)data.at(4) >> 3) & 1;
 
 //	qDebug() << QString("=== Apercu TIM ===");
-//	qDebug() << QString("Tag = %1, version = %2, reste = %3").arg(tag).arg(version).arg(QString(data.mid(2,2).toHex()));
+//	qDebug() << QString("version = %1, reste = %2").arg(version).arg(QString(data.mid(2,2).toHex()));
 //	qDebug() << QString("bpp = %1, hasPal = %2, flag = %3, reste = %4").arg(bpp).arg(hasPal).arg((quint8)data.at(4),0,2).arg(QString(data.mid(5,3).toHex()));
 
 	if(hasPal && bpp > 1)
@@ -77,15 +82,18 @@ bool TimFile::open(const QByteArray &data)
 
 		quint16 onePalSize = (bpp==0 ? 16 : 256);
 		int nbPal = (palSize-12)/(onePalSize*2);
-		if((palSize-12)%(onePalSize*2) != 0)
-		{
+
+		if((palSize-12)%(onePalSize*2) != 0) {
 			nbPal *= 2;
 		}
-		if(nbPal > 0)
-		{
+
+		if(palSize != 12 + onePalSize * nbPal * 2) {
+			return false;
+		}
+
+		if(nbPal > 0) {
 			int pos=0;
-			for(int i=0 ; i<nbPal ; ++i)
-			{
+			for(int i=0 ; i<nbPal ; ++i) {
 				QVector<QRgb> pal;
 				QBitArray alphaBits(onePalSize);
 
@@ -100,9 +108,7 @@ bool TimFile::open(const QByteArray &data)
 
 				pos += pos % palW == 0 ? onePalSize : palW - onePalSize;
 			}
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 
@@ -336,6 +342,13 @@ ExtraData TimFile::extraData() const
 	ret["paletteY"] = paletteY();
 	ret["imageX"] = imageX();
 	ret["imageY"] = imageY();
+
+#ifdef TIMFILE_EXTRACT_UNUSED_DATA
+	ret["version"] = _version;
+	ret["headerUnused1"] = _headerUnused1;
+	ret["headerUnused2"] = _headerUnused2;
+#endif
+
 	return ExtraData(ret);
 }
 
@@ -355,6 +368,11 @@ bool TimFile::setExtraData(const ExtraData &extraData)
 	setExtraDataField(palY, "paletteY");
 	setExtraDataField(imgX, "imageX");
 	setExtraDataField(imgY, "imageY");
+#ifdef TIMFILE_EXTRACT_UNUSED_DATA
+	setExtraDataField(_version, "version");
+	setExtraDataField(_headerUnused1, "headerUnused1");
+	setExtraDataField(_headerUnused2, "headerUnused2");
+#endif
 
 	return ok;
 }

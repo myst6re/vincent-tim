@@ -18,6 +18,8 @@
 #ifndef TIMFILE_H
 #define TIMFILE_H
 
+//#define TIMFILE_EXTRACT_UNUSED_DATA
+
 #include <QtCore>
 #include "TextureFile.h"
 
@@ -75,6 +77,11 @@ private:
 	quint16 palW, palH;
 	quint16 imgX, imgY;
 	QList<QBitArray> _alphaBits;
+#ifdef TIMFILE_EXTRACT_UNUSED_DATA
+	quint8 _version;
+	quint16 _headerUnused1;
+	quint32 _headerUnused2;
+#endif
 };
 
 #endif // TIMFILE_H

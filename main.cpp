@@ -234,13 +234,17 @@ int main(int argc, char *argv[])
 						if (texture->open(data.mid(pos.first, pos.second))) {
 							if (args.outputFormat().compare("tim", Qt::CaseInsensitive) == 0) {
 								if (!texture->saveToFile(args.destination(path, num))) {
-									break;
+									qWarning() << "Error: Cannot save Texture file from" << QDir::toNativeSeparators(path) << "to" << args.destination(path, num);
+									continue;
+								} else {
+									printf("%s\n", qPrintable(QDir::toNativeSeparators(args.destination(path, num))));
 								}
 							} else {
-								fromTexture(texture, path, args, num++);
+								fromTexture(texture, path, args, num);
 							}
+							num++;
 						} else {
-							qWarning() << "Error: Cannot open Texture file";
+							qWarning() << "Error: Cannot open Texture file from" << QDir::toNativeSeparators(path);
 							a.exit(1);
 						}
 						delete texture;
