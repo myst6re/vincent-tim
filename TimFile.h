@@ -19,11 +19,12 @@
 #define TIMFILE_H
 
 //#define TIMFILE_EXTRACT_UNUSED_DATA
+#define TIMFILE_EXPLORE_BUFFER_SIZE		qint64(16384)
 
 #include <QtCore>
 #include "TextureFile.h"
 
-typedef QPair<int, int> PosSize;
+typedef QPair<qint64, int> PosSize;
 
 class TimFile : public TextureFile
 {
@@ -66,8 +67,9 @@ public:
 	QSize paletteSize() const;
 
 	static TimFile fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette = QImage());
-	static QList<PosSize> findTims(const QByteArray &data, int limit = 0);
+	static QList<PosSize> findTims(QIODevice *device, int limit = 0);
 private:
+	static bool nextTim(QIODevice *device, qint64 limit = 0);
 	void setPaletteSize(const QSize &size);
 	QList< QVector<QRgb> > exportColorTables() const;
 	void importColorTables(const QList< QVector<QRgb> > &colorTables);

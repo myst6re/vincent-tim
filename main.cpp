@@ -224,14 +224,13 @@ int main(int argc, char *argv[])
 
 					delete texture;
 				} else { // Search tim files
-					QByteArray data = f.readAll();
-					f.close();
-					QList<PosSize> positions = TimFile::findTims(data);
+					QList<PosSize> positions = TimFile::findTims(&f);
 
 					int num = 0;
 					foreach (const PosSize &pos, positions) {
 						texture = new TimFile();
-						if (texture->open(data.mid(pos.first, pos.second))) {
+						f.seek(pos.first);
+						if (texture->open(f.read(pos.second))) {
 							if (args.outputFormat().compare("tim", Qt::CaseInsensitive) == 0) {
 								if (!texture->saveToFile(args.destination(path, num))) {
 									qWarning() << "Error: Cannot save Texture file from" << QDir::toNativeSeparators(path) << "to" << args.destination(path, num);
