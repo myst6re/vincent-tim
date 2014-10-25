@@ -132,25 +132,25 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args,
 	        && tex->depth() < 16) { // Do not use isPaletted for that!
 		if (pathPalette.isEmpty()) {
 			qWarning() << "Error: Please set the input path palette";
-			return false;
+			goto toTextureError;
 		}
 
 		QImage paletteImage;
 		if (paletteImage.load(pathPalette)) {
 			if (!tex->setPalette(paletteImage)) {
 				qWarning() << "Error: Please set the depth in the meta file";
-				return false;
+				goto toTextureError;
 			}
 
 			if (args.palette() < 0 || args.palette() >= tex->colorTableCount()) {
 				qWarning() << "Error: Please set a valid number of palette";
-				return false;
+				goto toTextureError;
 			}
 
 			tex->convertToIndexedFormat(args.palette());
 		} else {
 			qWarning() << "Error: Cannot open the input palette";
-			return false;
+			goto toTextureError;
 		}
 	}
 
