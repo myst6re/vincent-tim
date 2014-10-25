@@ -33,8 +33,6 @@ class TextureFile
 public:
 	static TextureFile *factory(const QString &format);
 	TextureFile();
-	TextureFile(const QImage &image);
-	TextureFile(const QImage &image, const QList< QVector<QRgb> > &colorTables);
 	virtual ~TextureFile() {}
 	bool openFromFile(const QString &filename);
 	virtual bool open(const QByteArray &data)=0;
@@ -45,7 +43,6 @@ public:
 	bool isValid() const;
 	void clear();
 	const QImage &image() const;
-	QImage *imagePtr();
 	bool isPaletted() const;
 	const QList< QVector<QRgb> > &colorTables() const;
 	int currentColorTable() const;
@@ -63,6 +60,8 @@ public:
 	void debug() const;
 	static QStringList supportedTextureFormats();
 protected:
+	TextureFile(const QImage &image);
+	TextureFile(const QImage &image, const QList< QVector<QRgb> > &colorTables);
 	quint16 colorPerPalFromDepth() const;
 	virtual void setPaletteSize(const QSize &size);
 	virtual inline QList< QVector<QRgb> > exportColorTables() const {

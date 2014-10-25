@@ -105,11 +105,6 @@ const QImage &TextureFile::image() const
 	return _image;
 }
 
-QImage *TextureFile::imagePtr()
-{
-	return &_image;
-}
-
 bool TextureFile::isPaletted() const
 {
 	return !_colorTables.isEmpty();
