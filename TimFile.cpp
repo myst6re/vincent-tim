@@ -109,6 +109,7 @@ bool TimFile::open(const QByteArray &data)
 				pos += pos % palW == 0 ? onePalSize : palW - onePalSize;
 			}
 		} else {
+			qWarning() << "TimFile::open nbPal <= 0" << nbPal;
 			return false;
 		}
 
@@ -147,8 +148,10 @@ bool TimFile::open(const QByteArray &data)
 		size = qMin((quint32)(12 + w/2*h), dataSize - 8 - palSize);
 	}
 
-	if(8 + palSize + size > (quint32)dataSize)
+	if(8 + palSize + size > (quint32)dataSize) {
+		qWarning() << "TimFile::open 8 + palSize + size > dataSize" << palSize << size << dataSize;
 		return false;
+	}
 
 	if(bpp==0)//mag176, icon
 	{
