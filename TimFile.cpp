@@ -87,7 +87,7 @@ bool TimFile::open(const QByteArray &data)
 			nbPal *= 2;
 		}
 
-		if(palSize != 12 + onePalSize * nbPal * 2) {
+		if(palSize != quint32(12 + onePalSize * nbPal * 2)) {
 			return false;
 		}
 
@@ -340,7 +340,7 @@ void TimFile::setDepth(quint8 depth)
 ExtraData TimFile::extraData() const
 {
 	QMap<QString, QVariant> ret;
-	//ret["depth"] = depth();
+	ret["depth"] = depth();
 	ret["paletteX"] = paletteX();
 	ret["paletteY"] = paletteY();
 	ret["imageX"] = imageX();
@@ -536,7 +536,7 @@ QList<PosSize> TimFile::findTims(QIODevice *device, int limit)
 				break;
 			}
 
-			if (palSize != w * h * 2 + 12) {
+			if (palSize != quint32(w * h * 2 + 12)) {
 				device->seek(index + 1);
 				continue;
 			}
@@ -564,7 +564,7 @@ QList<PosSize> TimFile::findTims(QIODevice *device, int limit)
 			break;
 		}
 
-		if (imgSize != w * 2 * h + 12) {
+		if (imgSize != quint32(w * 2 * h + 12)) {
 			device->seek(index + 1);
 			continue;
 		}
