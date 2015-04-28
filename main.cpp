@@ -128,7 +128,7 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args,
 	tex->setExtraData(meta);
 
 	// Not texture to texture
-	if (args.outputFormat().compare(args.inputFormat(path)) != 0
+	if (args.outputFormat().compare(args.inputFormat(path), Qt::CaseInsensitive) != 0
 	        && tex->depth() < 16) { // Do not use isPaletted for that!
 		if (pathPalette.isEmpty()) {
 			qWarning() << "Error: Please set the input path palette";
@@ -205,11 +205,11 @@ int main(int argc, char *argv[])
 					texture = TextureFile::factory(args.inputFormat(path));
 
 					if (texture->open(f.readAll())) {
-						if (TextureFile::supportedTextureFormats().contains(args.outputFormat())) {
+						if (TextureFile::supportedTextureFormats().contains(args.outputFormat(), Qt::CaseInsensitive)) {
 							if (!toTexture(texture, path, args)) {
 								break;
 							}
-						} else if (TextureFile::supportedTextureFormats().contains(args.inputFormat(path))) {
+						} else if (TextureFile::supportedTextureFormats().contains(args.inputFormat(path), Qt::CaseInsensitive)) {
 							fromTexture(texture, path, args);
 						} else {
 							qWarning() << "Error: input format or output format must be a supported texture format" << TextureFile::supportedTextureFormats();
