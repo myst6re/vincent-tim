@@ -263,7 +263,7 @@ bool TimFile::save(QByteArray &data) const
 
 			for(i=0 ; i<colorPerPal ; ++i) {
 				quint16 psColor = PsColor::toPsColor(colorTable.at(i));
-				setPsColorAlphaBit(psColor, alphaBit.at(i));
+				psColor = setPsColorAlphaBit(psColor, alphaBit.at(i));
 				data.append((char *)&psColor, 2);
 			}
 
@@ -435,7 +435,7 @@ void TimFile::importColorTables(const QList< QVector<QRgb> > &colorTables)
 				color = qRgba(0, 0, 0, 0);
 			} else if (alpha == 127) { // Semi-transparent
 				color = qRgba(qRed(color), qGreen(color), qBlue(color), 255);
-				alphaBits.setBit(i, true);
+				alphaBits.setBit(i);
 			} else {
 				color = qRgba(qRed(color), qGreen(color), qBlue(color), 255);
 			}

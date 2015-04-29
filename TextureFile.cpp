@@ -162,9 +162,8 @@ QImage TextureFile::palette() const
 
 	image.fill(Qt::black);
 
-	y = 0;
+	x = y = 0;
 	foreach (const QVector<QRgb> &colorTable, exportColorTables()) {
-		x = 0;
 		foreach (const QRgb &color, colorTable) {
 			if (y > maxHeight) {
 				qWarning() << "More color tables than palette height";
@@ -172,7 +171,7 @@ QImage TextureFile::palette() const
 			}
 			image.setPixel(x, y, color);
 
-			if (x == maxWidth) {
+			if (x >= maxWidth) {
 				x = 0;
 				++y;
 			} else {
