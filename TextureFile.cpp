@@ -235,6 +235,9 @@ void TextureFile::convertToIndexedFormat(int colorTableId)
 			}
 			pixels++;
 		}
+	} else if (_image.format() == QImage::Format_Indexed8) {
+		_image.setColorTable(colors);
+		return;
 	}
 
 	_image = _image.convertToFormat(QImage::Format_Indexed8, colors);
