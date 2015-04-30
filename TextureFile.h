@@ -33,8 +33,6 @@ class TextureFile
 public:
 	static TextureFile *factory(const QString &format);
 	TextureFile();
-	TextureFile(const QImage &image);
-	TextureFile(const QImage &image, const QList< QVector<QRgb> > &colorTables);
 	virtual ~TextureFile() {}
 	bool openFromFile(const QString &filename);
 	virtual bool open(const QByteArray &data)=0;
@@ -45,7 +43,6 @@ public:
 	bool isValid() const;
 	void clear();
 	const QImage &image() const;
-	QImage *imagePtr();
 	bool isPaletted() const;
 	const QList< QVector<QRgb> > &colorTables() const;
 	int currentColorTable() const;
@@ -60,15 +57,19 @@ public:
 	void convertToIndexedFormat(int colorTableId);
 	quint16 colorPerPal() const;
 	virtual QSize paletteSize() const;
-	virtual QVector<quint8> alpha() const;
-	virtual void setAlpha(const QVector<quint8> &alpha);
-	QImage alphaImage() const;
-	void setAlphaImage(const QImage &image);
 	void debug() const;
 	static QStringList supportedTextureFormats();
 protected:
+	TextureFile(const QImage &image);
+	TextureFile(const QImage &image, const QList< QVector<QRgb> > &colorTables);
 	quint16 colorPerPalFromDepth() const;
 	virtual void setPaletteSize(const QSize &size);
+	virtual inline QList< QVector<QRgb> > exportColorTables() const {
+		return _colorTables;
+	}
+	virtual inline void importColorTables(const QList< QVector<QRgb> > &colorTables) {
+		_colorTables = colorTables;
+	}
 
 	QImage _image;
 	QList< QVector<QRgb> > _colorTables;

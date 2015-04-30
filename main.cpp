@@ -128,29 +128,29 @@ bool toTexture(TextureFile *texture, const QString &path, const Arguments &args,
 	tex->setExtraData(meta);
 
 	// Not texture to texture
-	if (args.outputFormat().compare(args.inputFormat(path)) != 0
+	if (args.outputFormat().compare(args.inputFormat(path), Qt::CaseInsensitive) != 0
 	        && tex->depth() < 16) { // Do not use isPaletted for that!
 		if (pathPalette.isEmpty()) {
 			qWarning() << "Error: Please set the input path palette";
-			return false;
+			goto toTextureError;
 		}
 
 		QImage paletteImage;
 		if (paletteImage.load(pathPalette)) {
 			if (!tex->setPalette(paletteImage)) {
 				qWarning() << "Error: Please set the depth in the meta file";
-				return false;
+				goto toTextureError;
 			}
 
 			if (args.palette() < 0 || args.palette() >= tex->colorTableCount()) {
 				qWarning() << "Error: Please set a valid number of palette";
-				return false;
+				goto toTextureError;
 			}
 
 			tex->convertToIndexedFormat(args.palette());
 		} else {
 			qWarning() << "Error: Cannot open the input palette";
-			return false;
+			goto toTextureError;
 		}
 	}
 
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 	QCoreApplication::setApplicationName("Vincent Tim");
-	QCoreApplication::setApplicationVersion("1.1");
+	QCoreApplication::setApplicationVersion("1.2");
 #ifdef Q_OS_WIN
 	QTextCodec::setCodecForLocale(QTextCodec::codecForName("IBM 850"));
 #endif
@@ -205,11 +205,11 @@ int main(int argc, char *argv[])
 					texture = TextureFile::factory(args.inputFormat(path));
 
 					if (texture->open(f.readAll())) {
-						if (TextureFile::supportedTextureFormats().contains(args.outputFormat())) {
+						if (TextureFile::supportedTextureFormats().contains(args.outputFormat(), Qt::CaseInsensitive)) {
 							if (!toTexture(texture, path, args)) {
 								break;
 							}
-						} else if (TextureFile::supportedTextureFormats().contains(args.inputFormat(path))) {
+						} else if (TextureFile::supportedTextureFormats().contains(args.inputFormat(path), Qt::CaseInsensitive)) {
 							fromTexture(texture, path, args);
 						} else {
 							qWarning() << "Error: input format or output format must be a supported texture format" << TextureFile::supportedTextureFormats();
@@ -224,23 +224,26 @@ int main(int argc, char *argv[])
 
 					delete texture;
 				} else { // Search tim files
-					QByteArray data = f.readAll();
-					f.close();
-					QList<PosSize> positions = TimFile::findTims(data);
+					QList<PosSize> positions = TimFile::findTims(&f);
 
 					int num = 0;
 					foreach (const PosSize &pos, positions) {
 						texture = new TimFile();
-						if (texture->open(data.mid(pos.first, pos.second))) {
+						f.seek(pos.first);
+						if (texture->open(f.read(pos.second))) {
 							if (args.outputFormat().compare("tim", Qt::CaseInsensitive) == 0) {
 								if (!texture->saveToFile(args.destination(path, num))) {
-									break;
+									qWarning() << "Error: Cannot save Texture file from" << QDir::toNativeSeparators(path) << "to" << args.destination(path, num);
+									continue;
+								} else {
+									printf("%s\n", qPrintable(QDir::toNativeSeparators(args.destination(path, num))));
 								}
 							} else {
-								fromTexture(texture, path, args, num++);
+								fromTexture(texture, path, args, num);
 							}
+							num++;
 						} else {
-							qWarning() << "Error: Cannot open Texture file";
+							qWarning() << "Error: Cannot open Texture file from" << QDir::toNativeSeparators(path);
 							a.exit(1);
 						}
 						delete texture;

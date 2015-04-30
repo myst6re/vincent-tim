@@ -61,8 +61,6 @@ When creating tex files, the meta data should contains at least these values:
     version=1
     # 1 if the image contains transparency
     hasAlpha=0
-    # 1 if the image have 16 colors per palette
-    fourBitsPerIndex=0
 
 (Many) other values are possible, but common cases are auto-generated
 with these few values.

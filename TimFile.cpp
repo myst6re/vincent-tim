@@ -43,18 +43,24 @@ bool TimFile::open(const QByteArray &data)
 	if(!data.startsWith(QByteArray("\x10\x00\x00\x00", 4)) || dataSize < 8)		return false;
 
 //	quint8 tag = (quint8)data.at(0);
-//	quint8 version = (quint8)data.at(1);
+#ifdef TIMFILE_EXTRACT_UNUSED_DATA
+	_version = (quint8)data.at(1);
+	memcpy(&_headerUnused1, constData + 2, 2);
+	memcpy(&_headerUnused2, constData + 4, 4);
+	_headerUnused2 &= 0xFFF8;
+#endif
 	bpp = (quint8)data.at(4) & 3;
 	hasPal = ((quint8)data.at(4) >> 3) & 1;
 
 //	qDebug() << QString("=== Apercu TIM ===");
-//	qDebug() << QString("Tag = %1, version = %2, reste = %3").arg(tag).arg(version).arg(QString(data.mid(2,2).toHex()));
+//	qDebug() << QString("version = %1, reste = %2").arg(version).arg(QString(data.mid(2,2).toHex()));
 //	qDebug() << QString("bpp = %1, hasPal = %2, flag = %3, reste = %4").arg(bpp).arg(hasPal).arg((quint8)data.at(4),0,2).arg(QString(data.mid(5,3).toHex()));
 
 	if(hasPal && bpp > 1)
 		return false;
 
 	_colorTables.clear();
+	_alphaBits.clear();
 
 	if(hasPal)
 	{
@@ -76,29 +82,34 @@ bool TimFile::open(const QByteArray &data)
 
 		quint16 onePalSize = (bpp==0 ? 16 : 256);
 		int nbPal = (palSize-12)/(onePalSize*2);
-		if((palSize-12)%(onePalSize*2) != 0)
-		{
+
+		if((palSize-12)%(onePalSize*2) != 0) {
 			nbPal *= 2;
 		}
-		if(nbPal > 0)
-		{
+
+		if(palSize != quint32(12 + onePalSize * nbPal * 2)) {
+			return false;
+		}
+
+		if(nbPal > 0) {
 			int pos=0;
-			for(int i=0 ; i<nbPal ; ++i)
-			{
+			for(int i=0 ; i<nbPal ; ++i) {
 				QVector<QRgb> pal;
+				QBitArray alphaBits(onePalSize);
 
 				for(quint16 j=0 ; j<onePalSize ; ++j) {
 					memcpy(&color, constData + 20 + pos*2 + j*2, 2);
 					pal.append(PsColor::fromPsColor(color, true));
+					alphaBits.setBit(j, psColorAlphaBit(color));
 				}
 
 				_colorTables.append(pal);
+				_alphaBits.append(alphaBits);
 
 				pos += pos % palW == 0 ? onePalSize : palW - onePalSize;
 			}
-		}
-		else
-		{
+		} else {
+			qWarning() << "TimFile::open nbPal <= 0" << nbPal;
 			return false;
 		}
 
@@ -137,8 +148,10 @@ bool TimFile::open(const QByteArray &data)
 		size = qMin((quint32)(12 + w/2*h), dataSize - 8 - palSize);
 	}
 
-	if(8 + palSize + size > (quint32)dataSize)
+	if(8 + palSize + size > (quint32)dataSize) {
+		qWarning() << "TimFile::open 8 + palSize + size > dataSize" << palSize << size << dataSize;
 		return false;
+	}
 
 	if(bpp==0)//mag176, icon
 	{
@@ -179,10 +192,13 @@ bool TimFile::open(const QByteArray &data)
 	}
 	else if(bpp==2)
 	{
+		QBitArray alphaBits;
+
 		while(i<size && y<h)
 		{
 			memcpy(&color, constData + 20 + palSize + i, 2);
 			pixels[x + y*w] = PsColor::fromPsColor(color, true);
+			alphaBits.setBit(i / 2, psColorAlphaBit(color));
 
 			++x;
 			if(x==w)
@@ -192,6 +208,8 @@ bool TimFile::open(const QByteArray &data)
 			}
 			i+=2;
 		}
+
+		_alphaBits.append(alphaBits);
 	}
 	else if(bpp==3)
 	{
@@ -216,6 +234,8 @@ bool TimFile::open(const QByteArray &data)
 
 bool TimFile::save(QByteArray &data) const
 {
+	Q_ASSERT(_colorTables.size() == _alphaBits.size());
+
 	bool hasPal = isPaletted();
 	quint32 flag = (hasPal << 3) | (bpp & 3);
 
@@ -233,15 +253,21 @@ bool TimFile::save(QByteArray &data) const
 		data.append((char *)&palW, 2);
 		data.append((char *)&palH, 2);
 
+		int colorTableId = 0;
 		foreach(const QVector<QRgb> &colorTable, _colorTables) {
+			const QBitArray &alphaBit = _alphaBits.at(colorTableId);
 			int i;
-			for(i=0 ; i<colorTable.size() && i<colorPerPal ; ++i) {
+
+			Q_ASSERT(colorTable.size() == colorPerPal);
+			Q_ASSERT(alphaBit.size() == colorPerPal);
+
+			for(i=0 ; i<colorPerPal ; ++i) {
 				quint16 psColor = PsColor::toPsColor(colorTable.at(i));
+				psColor = setPsColorAlphaBit(psColor, alphaBit.at(i));
 				data.append((char *)&psColor, 2);
 			}
-			if(i<colorPerPal) {
-				data.append(QByteArray(colorPerPal - i, '\0'));
-			}
+
+			++colorTableId;
 		}
 
 		quint16 width = _image.width(), height = _image.height();
@@ -276,6 +302,7 @@ bool TimFile::save(QByteArray &data) const
 	} else {
 		quint16 width = _image.width(), height = _image.height();
 		quint32 sizeImgSection = 12 + width * bpp * height;
+		const QBitArray &alphaBit = _alphaBits.first();
 
 		data.append((char *)&sizeImgSection, 4);
 		data.append((char *)&imgX, 2);
@@ -287,6 +314,7 @@ bool TimFile::save(QByteArray &data) const
 			for(int x=0 ; x<width ; ++x) {
 				if(bpp == 2) {
 					quint16 color = PsColor::toPsColor(_image.pixel(x, y));
+					setPsColorAlphaBit(color, alphaBit.at(y * width + x));
 					data.append((char *)&color, 2);
 				} else {
 					QRgb c = _image.pixel(x, y);
@@ -298,18 +326,6 @@ bool TimFile::save(QByteArray &data) const
 	}
 
 	return true;
-}
-
-QVector<quint8> TimFile::alpha() const
-{
-	// TODO
-	return TextureFile::alpha();
-}
-
-void TimFile::setAlpha(const QVector<quint8> &alpha)
-{
-	TextureFile::setAlpha(alpha);
-	// TODO
 }
 
 void TimFile::setDepth(quint8 depth)
@@ -324,11 +340,18 @@ void TimFile::setDepth(quint8 depth)
 ExtraData TimFile::extraData() const
 {
 	QMap<QString, QVariant> ret;
-	//ret["depth"] = depth();
+	ret["depth"] = depth();
 	ret["paletteX"] = paletteX();
 	ret["paletteY"] = paletteY();
 	ret["imageX"] = imageX();
 	ret["imageY"] = imageY();
+
+#ifdef TIMFILE_EXTRACT_UNUSED_DATA
+	ret["version"] = _version;
+	ret["headerUnused1"] = _headerUnused1;
+	ret["headerUnused2"] = _headerUnused2;
+#endif
+
 	return ExtraData(ret);
 }
 
@@ -348,6 +371,11 @@ bool TimFile::setExtraData(const ExtraData &extraData)
 	setExtraDataField(palY, "paletteY");
 	setExtraDataField(imgX, "imageX");
 	setExtraDataField(imgY, "imageY");
+#ifdef TIMFILE_EXTRACT_UNUSED_DATA
+	setExtraDataField(_version, "version");
+	setExtraDataField(_headerUnused1, "headerUnused1");
+	setExtraDataField(_headerUnused2, "headerUnused2");
+#endif
 
 	return ok;
 }
@@ -363,6 +391,63 @@ void TimFile::setPaletteSize(const QSize &size)
 	palH = size.height();
 }
 
+QList< QVector<QRgb> > TimFile::exportColorTables() const
+{
+	QList< QVector<QRgb> > ret;
+	QListIterator<QBitArray> alphaIt(_alphaBits);
+
+	Q_ASSERT(_alphaBits.size() == _colorTables.size());
+
+	foreach (QVector<QRgb> colorTable, _colorTables) {
+		const QBitArray &alphaBits = alphaIt.next();
+
+		Q_ASSERT(alphaBits.size() == colorTable.size());
+
+		for (int i=0; i<colorTable.size(); ++i) {
+			const QRgb &color = colorTable[i];
+			int alpha = qAlpha(color);
+			if (alpha == 255) { // Opaque
+				if (alphaBits.at(i)) {
+					alpha = 127; // Semi-transparent
+				}
+			}
+			colorTable[i] = qRgba(qRed(color), qGreen(color), qBlue(color), alpha);
+		}
+
+		ret << colorTable;
+	}
+
+	return ret;
+}
+
+void TimFile::importColorTables(const QList< QVector<QRgb> > &colorTables)
+{
+	_colorTables.clear();
+
+	foreach (QVector<QRgb> colorTable, colorTables) {
+		QBitArray alphaBits(colorTable.size(), false);
+
+		for (int i=0; i<colorTable.size(); ++i) {
+			QRgb color = colorTable[i];
+			int alpha = qAlpha(color);
+
+			if (alpha == 0) { // Fully-transparent
+				color = qRgba(0, 0, 0, 0);
+			} else if (alpha == 127) { // Semi-transparent
+				color = qRgba(qRed(color), qGreen(color), qBlue(color), 255);
+				alphaBits.setBit(i);
+			} else {
+				color = qRgba(qRed(color), qGreen(color), qBlue(color), 255);
+			}
+
+			colorTable[i] = color;
+		}
+
+		_colorTables << colorTable;
+		_alphaBits << alphaBits;
+	}
+}
+
 TimFile TimFile::fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette)
 {
 	TimFile tim(*texture);
@@ -373,49 +458,114 @@ TimFile TimFile::fromTexture(TextureFile *texture, const ExtraData &meta, const 
 	return tim;
 } 
 
-QList<PosSize> TimFile::findTims(const QByteArray &data, int limit)
+bool TimFile::nextTim(QIODevice *device, qint64 limit)
 {
-	int index = -1, dataSize = data.size();
+	QByteArray data, find = QByteArray("\x10\x00\x00\x00", 4);
+	qint64 offset, bufferSize;
+	int index;
+
+	forever {
+		offset = device->pos();
+		if (limit > 0) {
+			bufferSize = qMin(TIMFILE_EXPLORE_BUFFER_SIZE, limit);
+		} else {
+			bufferSize = TIMFILE_EXPLORE_BUFFER_SIZE;
+		}
+		data = device->read(bufferSize);
+
+		if (data.size() < find.size()) {
+			return false;
+		}
+
+		index = data.indexOf(find);
+
+		if (index != -1) {
+			device->seek(offset + index);
+			return true;
+		} else {
+			// back to pos - (pattern size - 1)
+			device->seek(device->pos() - (find.size() - 1));
+			if (limit > 0) {
+				limit -= device->pos() - offset; // bytes read
+				if (limit <= 0) {
+					return false;
+				}
+			}
+		}
+	}
+}
+
+QList<PosSize> TimFile::findTims(QIODevice *device, int limit)
+{
+	qint64 index;
 	quint32 palSize, imgSize;
 	quint16 w, h;
 	quint8 bpp;
-	const char *constData = data.constData();
 	QList<PosSize> positions;
 
-	while ((limit <= 0 || positions.size() < limit) &&
-	       (index = data.indexOf(QByteArray("\x10\x00\x00\x00",4), index+1)) != -1) {
-		palSize = 0;
+	while (nextTim(device, limit)) {
+		index = device->pos();
 
-		if (index + 4 >= dataSize)				continue;
+		if (!device->seek(device->pos() + 4)) {
+			break;
+		}
 
-		bpp = (quint8)data.at(index + 4);
+		if (device->read((char *)&bpp, 1) != 1) {
+			break;
+		}
+
+		if (!device->seek(device->pos() + 3)) {
+			break;
+		}
 
 		if (bpp == 8 || bpp == 9) {
-			memcpy(&palSize, constData + index + 8, 4);
+			if (device->read((char *)&palSize, 4) != 4) {
+				break;
+			}
 
-			if (index + 20 >= dataSize)			continue;
+			// X and Y
+			if (!device->seek(device->pos() + 4)) {
+				break;
+			}
 
-			memcpy(&w, constData + index + 16, 2);
-			memcpy(&h, constData + index + 18, 2);
+			if (device->read((char *)&w, 2) != 2) {
+				break;
+			}
 
-			if (palSize != (quint32)w * h * 2 + 12)	continue;
+			if (device->read((char *)&h, 2) != 2) {
+				break;
+			}
 
+			if (palSize != quint32(w * h * 2 + 12)) {
+				device->seek(index + 1);
+				continue;
+			}
+
+			device->seek(device->pos() + palSize - 12);
 		} else if (bpp != 2 && bpp != 3) {
+			device->seek(index + 1);
 			continue;
 		}
 
-		memcpy(&imgSize, constData + index + 8 + palSize, 4);
-
-		if ((quint32)index + 20 + palSize >= (quint32)dataSize) {
-			continue;
+		if (device->read((char *)&imgSize, 4) != 4) {
+			break;
 		}
 
-		memcpy(&w, constData + index + 16 + palSize, 2);
-		memcpy(&h, constData + index + 18 + palSize, 2);
+		// X and Y
+		if (!device->seek(device->pos() + 4)) {
+			break;
+		}
 
-		if (((bpp == 8 || bpp == 9 || bpp == 2) &&
-		     imgSize != (quint32)w * 2 * h + 12) ||
-		        (bpp == 3 && imgSize != (quint32)w * 3 * h + 12)) {
+		if (device->read((char *)&w, 2) != 2) {
+			break;
+		}
+
+		if (device->read((char *)&h, 2) != 2) {
+			break;
+		}
+
+		if (imgSize != quint32(w * 2 * h + 12)) {
+			device->seek(index + 1);
 			continue;
 		}
 

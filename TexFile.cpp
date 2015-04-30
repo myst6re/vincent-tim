@@ -18,10 +18,10 @@
 #include "TexFile.h"
 #include "PsColor.h"
 
-TexFile::TexFile() :
+TexFile::TexFile(Version version, bool hasAlpha, bool fourBitsPerIndex) :
 	TextureFile()
 {
-	setHeader(One, true);
+	setHeader(version, hasAlpha, fourBitsPerIndex);
 }
 
 TexFile::TexFile(const TextureFile &textureFile, const TexStruct &header,
@@ -31,17 +31,17 @@ TexFile::TexFile(const TextureFile &textureFile, const TexStruct &header,
 }
 
 TexFile::TexFile(const TextureFile &textureFile,
-                 Version version, bool hasAlpha, bool fourBitsPerIndex,
+                 Version version, bool hasAlpha,
                  const QVector<quint8> &colorKeyArray) :
     TextureFile(textureFile), colorKeyArray(colorKeyArray)
 {
-	setHeader(version, hasAlpha, fourBitsPerIndex);
+	setHeader(version, hasAlpha, textureFile.depth() == 4);
 }
 
-TexFile::TexFile(const TextureFile &texture) :
-    TextureFile(texture)
+TexFile::TexFile(const TextureFile &textureFile) :
+    TextureFile(textureFile)
 {
-	setHeader(One, true, texture.depth() == 4);
+	setHeader(One, true, textureFile.depth() == 4);
 }
 
 bool TexFile::open(const QByteArray &data)
@@ -182,23 +182,6 @@ bool TexFile::save(QByteArray &data) const
 void TexFile::setDepth(quint8 depth)
 {
 	TextureFile::setDepth(depth);
-}
-
-QVector<quint8> TexFile::alpha() const
-{
-	QVector<quint8> ret;
-	foreach (quint8 colorKey, colorKeyArray) {
-		ret.append(colorKey);
-	}
-	return ret;
-}
-
-void TexFile::setAlpha(const QVector<quint8> &alpha)
-{
-	colorKeyArray.clear();
-	foreach (quint8 a, alpha) {
-		colorKeyArray.append(a);
-	}
 }
 
 void TexFile::setHeader(Version version, bool hasAlpha, bool fourBitsPerIndex)

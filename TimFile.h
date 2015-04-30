@@ -18,10 +18,13 @@
 #ifndef TIMFILE_H
 #define TIMFILE_H
 
+//#define TIMFILE_EXTRACT_UNUSED_DATA
+#define TIMFILE_EXPLORE_BUFFER_SIZE		qint64(16384)
+
 #include <QtCore>
 #include "TextureFile.h"
 
-typedef QPair<int, int> PosSize;
+typedef QPair<qint64, int> PosSize;
 
 class TimFile : public TextureFile
 {
@@ -62,18 +65,25 @@ public:
 	bool setExtraData(const ExtraData &extraData);
 
 	QSize paletteSize() const;
-	void setPaletteSize(const QSize &size);
-
-	QVector<quint8> alpha() const;
-	void setAlpha(const QVector<quint8> &alpha);
 
 	static TimFile fromTexture(TextureFile *texture, const ExtraData &meta, const QImage &palette = QImage());
-	static QList<PosSize> findTims(const QByteArray &data, int limit = 0);
+	static QList<PosSize> findTims(QIODevice *device, int limit = 0);
 private:
+	static bool nextTim(QIODevice *device, qint64 limit = 0);
+	void setPaletteSize(const QSize &size);
+	QList< QVector<QRgb> > exportColorTables() const;
+	void importColorTables(const QList< QVector<QRgb> > &colorTables);
+
 	quint8 bpp;
 	quint16 palX, palY;
 	quint16 palW, palH;
 	quint16 imgX, imgY;
+	QList<QBitArray> _alphaBits;
+#ifdef TIMFILE_EXTRACT_UNUSED_DATA
+	quint8 _version;
+	quint16 _headerUnused1;
+	quint32 _headerUnused2;
+#endif
 };
 
 #endif // TIMFILE_H
