@@ -192,7 +192,7 @@ bool TimFile::open(const QByteArray &data)
 	}
 	else if(bpp==2)
 	{
-		QBitArray alphaBits;
+		QBitArray alphaBits(w * h);
 
 		while(i<size && y<h)
 		{
