@@ -231,6 +231,10 @@ int main(int argc, char *argv[])
 						texture = new TimFile();
 						f.seek(pos.first);
 						if (texture->open(f.read(pos.second))) {
+							printf("0x%s -> 0x%s (%d B)\n",
+							       qPrintable(QString("%1").arg(pos.first, 8, 16, QChar('0'))),
+							       qPrintable(QString("%1").arg(pos.first + pos.second - 1, 8, 16, QChar('0'))),
+							       pos.second);
 							if (args.outputFormat().compare("tim", Qt::CaseInsensitive) == 0) {
 								if (!texture->saveToFile(args.destination(path, num))) {
 									qWarning() << "Error: Cannot save Texture file from" << QDir::toNativeSeparators(path) << "to" << args.destination(path, num);
