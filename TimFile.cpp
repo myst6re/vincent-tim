@@ -39,8 +39,11 @@ bool TimFile::open(const QByteArray &data)
 	const char *constData = data.constData();
 	bool hasPal;
 	int dataSize = data.size();
-
-	if(!data.startsWith(QByteArray("\x10\x00\x00\x00", 4)) || dataSize < 8)		return false;
+	
+	if(!data.startsWith(QByteArray("\x10\x00\x00\x00", 4)) || dataSize < 8) {
+		qWarning() << "Invalid TIM header";
+		return false;
+	}
 
 //	quint8 tag = (quint8)data.at(0);
 #ifdef TIMFILE_EXTRACT_UNUSED_DATA
@@ -55,17 +58,21 @@ bool TimFile::open(const QByteArray &data)
 //	qDebug() << QString("=== Apercu TIM ===");
 //	qDebug() << QString("version = %1, reste = %2").arg(version).arg(QString(data.mid(2,2).toHex()));
 //	qDebug() << QString("bpp = %1, hasPal = %2, flag = %3, reste = %4").arg(bpp).arg(hasPal).arg((quint8)data.at(4),0,2).arg(QString(data.mid(5,3).toHex()));
-
-	if(hasPal && bpp > 1)
+	
+	if(hasPal && bpp > 1) {
+		qWarning() << "Bits Per Pixel is 16 and there are palettes";
 		return false;
+	}
 
 	_colorTables.clear();
 	_alphaBits.clear();
 
 	if(hasPal)
 	{
-		if(dataSize < 20)
+		if(dataSize < 20) {
+			qWarning() << "File too short to have palettes";
 			return false;
+		}
 
 		memcpy(&palSize, constData + 8, 4);
 		memcpy(&palX, constData + 12, 2);
@@ -76,19 +83,17 @@ bool TimFile::open(const QByteArray &data)
 //		qDebug() << QString("-Palette-");
 //		qDebug() << QString("Size = %1, w = %2, h = %3").arg(palSize).arg(palW).arg(palH);
 //		qDebug() << QString("x = %1, y = %2").arg(palX).arg(palY);
-
-		if((quint32)dataSize < 8+palSize/* || palSize != (quint32)palW*palH*2+12*/)
+		
+		if((quint32)dataSize < 8+palSize/* || palSize != (quint32)palW*palH*2+12*/) {
+			qWarning() << "File too short for the size of palettes section" << palSize;
 			return false;
+		}
 
 		quint16 onePalSize = (bpp==0 ? 16 : 256);
 		int nbPal = (palSize-12)/(onePalSize*2);
 
-		if((palSize-12)%(onePalSize*2) != 0) {
+		if((palSize-12)%(onePalSize*2) != 0 && palSize == quint32(12 + onePalSize * nbPal * 4)) {
 			nbPal *= 2;
-		}
-
-		if(palSize != quint32(12 + onePalSize * nbPal * 2)) {
-			return false;
 		}
 
 		if(nbPal > 0) {
@@ -116,9 +121,11 @@ bool TimFile::open(const QByteArray &data)
 		_currentColorTable = 0;
 //		qDebug() << QString("NbPal = %1 (valid : %2)").arg(nbPal).arg((palSize-12)%(onePalSize*2));
 	}
-
-	if((quint32)dataSize < 20+palSize)
+	
+	if((quint32)dataSize < 20+palSize) {
+		qWarning() << "File too short";
 		return false;
+	}
 
 	memcpy(&imgSize, constData + 8 + palSize, 4);
 	memcpy(&imgX, constData + 12 + palSize, 2);
