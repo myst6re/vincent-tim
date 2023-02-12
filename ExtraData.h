@@ -19,6 +19,7 @@
 
 #include <QMap>
 #include <QVariant>
+#include <QIODevice>
 
 class ExtraData
 {
