@@ -19,34 +19,34 @@
 #include "PsColor.h"
 
 TexFile::TexFile(Version version, bool hasAlpha, bool fourBitsPerIndex) :
-	TextureFile()
+      TextureFile()
 {
 	setHeader(version, hasAlpha, fourBitsPerIndex);
 }
 
 TexFile::TexFile(const TextureFile &textureFile, const TexStruct &header,
-		const QVector<quint8> &colorKeyArray) :
-	TextureFile(textureFile), _header(header), colorKeyArray(colorKeyArray)
+                 const QVector<quint8> &colorKeyArray) :
+      TextureFile(textureFile), _header(header), colorKeyArray(colorKeyArray)
 {
 }
 
 TexFile::TexFile(const TextureFile &textureFile,
                  Version version, bool hasAlpha,
                  const QVector<quint8> &colorKeyArray) :
-    TextureFile(textureFile), colorKeyArray(colorKeyArray)
+      TextureFile(textureFile), colorKeyArray(colorKeyArray)
 {
 	setHeader(version, hasAlpha, textureFile.depth() == 4);
 }
 
 TexFile::TexFile(const TextureFile &textureFile) :
-    TextureFile(textureFile)
+      TextureFile(textureFile)
 {
 	setHeader(One, true, textureFile.depth() == 4);
 }
 
 bool TexFile::open(const QByteArray &data)
 {
-    const char *constData = data.constData();
+	const char *constData = data.constData();
 	quint32 w, h, headerSize, paletteSectionSize, imageSectionSize, colorKeySectionSize;
 
 	if((quint32)data.size() < sizeof(TexStruct)) {
@@ -112,12 +112,17 @@ bool TexFile::open(const QByteArray &data)
 				colorKeyArray.append(data.at(colorKeyStart+j));
 			}
 		}
-    }
-    else
-    {
+	}
+	else
+	{
 		quint16 color;
 		_image = QImage(w, h, QImage::Format_ARGB32);
 		QRgb *pixels = (QRgb *)_image.bits();
+
+		if (_header.bytesPerPixel < 2 || _header.bytesPerPixel > 4) {
+			qWarning() << "tex invalid bytesPerPixel!" << _header.bytesPerPixel;
+			return false;
+		}
 
 		for(i=0 ; i<imageSectionSize ; i+=_header.bytesPerPixel) {
 			if(_header.bytesPerPixel == 2) {
@@ -125,11 +130,13 @@ bool TexFile::open(const QByteArray &data)
 				pixels[i/2] = PsColor::fromPsColor(color);
 			} else if(_header.bytesPerPixel == 3) {
 				pixels[i/3] = qRgb(constData[headerSize+i], constData[headerSize+i+1], constData[headerSize+i+2]);
+			} else if (_header.bytesPerPixel == 4) {
+				pixels[i/4] = qRgba(constData[headerSize+i], constData[headerSize+i+1], constData[headerSize+i+2], constData[headerSize+i+3]);
 			}
-        }
+		}
 	}
 
-    return true;
+	return true;
 }
 
 bool TexFile::save(QByteArray &data) const
@@ -416,43 +423,43 @@ void TexFile::debug()
 	QFile f("debugTex.txt");
 	f.open(QIODevice::WriteOnly);
 	f.write(QString("version= %1 | unknown1= %2 | hasColorKey= %3 | unknown2= %4 | unknown3= %5\n")
-			.arg(h.version).arg(h.unknown1).arg(h.hasColorKey).arg(h.unknown2).arg(h.unknown3).toLatin1());
+	            .arg(h.version).arg(h.unknown1).arg(h.hasColorKey).arg(h.unknown2).arg(h.unknown3).toLatin1());
 	f.write(QString("minBitsPerColor= %1 | maxBitsPerColor= %2 | minAlphaBits= %3 | maxAlphaBits= %4 | minBitsPerPixel= %5\n")
-			.arg(h.minBitsPerColor).arg(h.maxBitsPerColor).arg(h.minAlphaBits).arg(h.maxAlphaBits).arg(h.minBitsPerPixel).toLatin1());
+	            .arg(h.minBitsPerColor).arg(h.maxBitsPerColor).arg(h.minAlphaBits).arg(h.maxAlphaBits).arg(h.minBitsPerPixel).toLatin1());
 	f.write(QString("maxBitsPerPixel= %1 | unknown4= %2 | nbPalettes= %3 | nbColorsPerPalette1= %4 | bitDepth= %5\n")
-			.arg(h.maxBitsPerPixel).arg(h.unknown4).arg(h.nbPalettes).arg(h.nbColorsPerPalette1).arg(h.bitDepth).toLatin1());
+	            .arg(h.maxBitsPerPixel).arg(h.unknown4).arg(h.nbPalettes).arg(h.nbColorsPerPalette1).arg(h.bitDepth).toLatin1());
 	f.write(QString("imageWidth= %1 | imageHeight= %2 | pitch= %3 | unknown5= %4 | hasPal= %5\n")
-			.arg(h.imageWidth).arg(h.imageHeight).arg(h.pitch).arg(h.unknown5).arg(h.hasPal).toLatin1());
+	            .arg(h.imageWidth).arg(h.imageHeight).arg(h.pitch).arg(h.unknown5).arg(h.hasPal).toLatin1());
 	f.write(QString("bitsPerIndex= %1 | indexedTo8bit= %2 | paletteSize= %3 | nbColorsPerPalette2= %4 | runtimeData1= %5\n")
-			.arg(h.bitsPerIndex).arg(h.indexedTo8bit).arg(h.paletteSize).arg(h.nbColorsPerPalette2).arg(h.runtimeData1).toLatin1());
+	            .arg(h.bitsPerIndex).arg(h.indexedTo8bit).arg(h.paletteSize).arg(h.nbColorsPerPalette2).arg(h.runtimeData1).toLatin1());
 	f.write(QString("bitsPerPixel= %1 | bytesPerPixel= %2 | nbRedBits1= %3 | nbGreenBits1= %4 | nbBlueBits1= %5\n")
-			.arg(h.bitsPerPixel).arg(h.bytesPerPixel).arg(h.nbRedBits1).arg(h.nbGreenBits1).arg(h.nbBlueBits1).toLatin1());
+	            .arg(h.bitsPerPixel).arg(h.bytesPerPixel).arg(h.nbRedBits1).arg(h.nbGreenBits1).arg(h.nbBlueBits1).toLatin1());
 	f.write(QString("nbAlphaBits1= %1 | redBitmask= %2 | greenBitmask= %3 | blueBitmask= %4 | alphaBitmask= %5\n")
-			.arg(h.nbAlphaBits1).arg(h.redBitmask).arg(h.greenBitmask).arg(h.blueBitmask).arg(h.alphaBitmask).toLatin1());
+	            .arg(h.nbAlphaBits1).arg(h.redBitmask).arg(h.greenBitmask).arg(h.blueBitmask).arg(h.alphaBitmask).toLatin1());
 	f.write(QString("redShift= %1 | greenShift= %2 | blueShift= %3 | alphaShift= %4 | nbRedBits2= %5\n")
-			.arg(h.redShift).arg(h.greenShift).arg(h.blueShift).arg(h.alphaShift).arg(h.nbRedBits2).toLatin1());
+	            .arg(h.redShift).arg(h.greenShift).arg(h.blueShift).arg(h.alphaShift).arg(h.nbRedBits2).toLatin1());
 	f.write(QString("nbGreenBits2= %1 | nbBlueBits2= %2 | nbAlphaBits2= %3 | redMax= %4 | greenMax= %5\n")
-			.arg(h.nbGreenBits2).arg(h.nbBlueBits2).arg(h.nbAlphaBits2).arg(h.redMax).arg(h.greenMax).toLatin1());
+	            .arg(h.nbGreenBits2).arg(h.nbBlueBits2).arg(h.nbAlphaBits2).arg(h.redMax).arg(h.greenMax).toLatin1());
 	f.write(QString("blueMax= %1 | alphaMax= %2 | hasColorKeyArray= %3 | runtimeData2= %4 | referenceAlpha= %5\n")
-			.arg(h.blueMax).arg(h.alphaMax).arg(h.hasColorKeyArray).arg(h.runtimeData2).arg(h.referenceAlpha).toLatin1());
+	            .arg(h.blueMax).arg(h.alphaMax).arg(h.hasColorKeyArray).arg(h.runtimeData2).arg(h.referenceAlpha).toLatin1());
 	f.write(QString("runtimeData3= %1 | unknown6= %2 | paletteIndex= %3 | runtimeData4= %4 | runtimeData5= %5\n")
-			.arg(h.runtimeData3).arg(h.unknown6).arg(h.paletteIndex).arg(h.runtimeData4).arg(h.runtimeData5).toLatin1());
+	            .arg(h.runtimeData3).arg(h.unknown6).arg(h.paletteIndex).arg(h.runtimeData4).arg(h.runtimeData5).toLatin1());
 	f.write(QString("unknown7= %1 | unknown8= %2 | unknown9= %3 | unknown10= %4 | unknown11= %5\n")
-			.arg(h.unknown7).arg(h.unknown8).arg(h.unknown9).arg(h.unknown10).arg(h.unknown11).toLatin1());
+	            .arg(h.unknown7).arg(h.unknown8).arg(h.unknown9).arg(h.unknown10).arg(h.unknown11).toLatin1());
 
 	for(int i=0 ; i<_colorTables.size() ; ++i) {
 		f.write(QString("Pal %1 ").arg(i).toLatin1());
 		foreach(const QRgb &color, _colorTables.at(i)) {
 			f.write(QString("(r=%1, g=%2, b=%3, a=%4) ")
-					.arg(qRed(color)).arg(qGreen(color)).arg(qBlue(color)).arg(qAlpha(color))
-					.toLatin1());
+			            .arg(qRed(color)).arg(qGreen(color)).arg(qBlue(color)).arg(qAlpha(color))
+			            .toLatin1());
 		}
 		f.write("\n");
 	}
 
 	for(int i=0 ; i<colorKeyArray.size() ; ++i) {
 		f.write(QString("%1, ")
-				.arg((quint8)colorKeyArray.at(i)).toLatin1());
+		            .arg((quint8)colorKeyArray.at(i)).toLatin1());
 	}
 
 	f.close();
