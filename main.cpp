@@ -191,6 +191,11 @@ int main(int argc, char *argv[])
 		args.showHelp();
 	} else {
 		foreach (const QString &path, args.paths()) {
+			if (QDir(path).exists()) {
+				qWarning() << "Directory ignored" << path;
+				continue;
+			}
+
 			TextureFile *texture;
 
 			if (args.inputFormat(path) == args.outputFormat()) {
