@@ -26,7 +26,9 @@ bool TextureImageFile::open(const QByteArray &data)
 {
 	bool ret = _image.loadFromData(data, _format);
 	_colorTables.clear();
-	_colorTables.append(_image.colorTable());
+	if (_image.format() == QImage::Format_Mono || _image.format() == QImage::Format_Mono || _image.format() == QImage::Format_Mono) {
+		_colorTables.append(_image.colorTable());
+	}
 	return ret;
 }
 

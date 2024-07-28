@@ -176,8 +176,8 @@ bool TexFile::save(QByteArray &data) const
 	} else {
 		QRgb *pixels = (QRgb *)_image.bits();
 		for(int i=0 ; i<_image.width()*_image.height() ; ++i) {
-			quint16 color = PsColor::toPsColor(pixels[i]);
-			data.append((char *)&color, 2);
+			QRgb color = pixels[i];
+			data.append((char *)&color, _header.bytesPerPixel);
 		}
 
 		// qDebug() << "texSize data" << data.size();
@@ -421,7 +421,7 @@ void TexFile::debug()
 	TexStruct h = _header;
 
 	QFile f("debugTex.txt");
-	f.open(QIODevice::WriteOnly);
+	f.open(QIODevice::WriteOnly | QIODevice::Truncate);
 	f.write(QString("version= %1 | unknown1= %2 | hasColorKey= %3 | unknown2= %4 | unknown3= %5\n")
 	            .arg(h.version).arg(h.unknown1).arg(h.hasColorKey).arg(h.unknown2).arg(h.unknown3).toLatin1());
 	f.write(QString("minBitsPerColor= %1 | maxBitsPerColor= %2 | minAlphaBits= %3 | maxAlphaBits= %4 | minBitsPerPixel= %5\n")
